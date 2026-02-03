@@ -1,0 +1,41 @@
+:root {
+    /* [레이아웃 - 관리자 전용] */
+    --header-height: 60px;
+    --sidebar-width: 260px; /* 관리자용 넓은 폭 고정 */
+    
+    /* [색상 - 관리자 테마 기본값] */
+    --bg-color: #334155;        /* 사이드바 배경 (남색) */
+    --text-color: #cbd5e1;      /* 사이드바 글씨 (연회색) */
+    --active-bg: rgba(255, 255, 255, 0.1); /* 활성 배경 */
+    --active-text: #ffffff;     /* 활성 글씨 (흰색) */
+    --hover-bg: rgba(255, 255, 255, 0.05);
+
+    /* [공통 포인트 컬러] */
+    --primary-color: #0d6efd;
+    --notification-badge-color: #dc3545;
+
+    /* [메인 컬러 팔레트] */
+    --main-blue: #3B82F6;
+    --dark-navy: #00407F;
+    --header-blue: #D9E9FF;
+    --border-blue: #BFDBFE;  /* 테두리 공통 색상 */
+    
+    /* [배경 및 텍스트] */
+    --bg-body: #F8FAFC;      /* Tudio 전용 밝은 배경 */
+    --text-main: #1E293B;
+    --text-muted: #64748B;
+
+    /* [Tudio 컴포넌트 전용 (버튼, 배지 등)] */
+    --tudio-primary-strong: #2f6bff; 
+    --tudio-surface: #ffffff;
+    --tudio-surface-soft: #fbfcff;
+    --tudio-border-soft: #e6edf6;
+    --tudio-border-subtle: #eef2f7;
+
+    /* [그림자 및 효과] */
+    --tudio-shadow-md: 0 6px 22px rgba(18, 38, 63, 0.06);
+    --tudio-shadow-hover: 0 10px 20px rgba(18, 38, 63, 0.08);
+    --tudio-radius-lg: 16px;
+    --tudio-radius-md: 12px;
+    --tudio-ease: .15s ease;
+}

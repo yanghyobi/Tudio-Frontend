@@ -1,0 +1,451 @@
+import axios from 'axios';
+import {
+  Ban, Building2, CheckCircle2, ChevronRight, Plus, Settings, Trash2,
+  User, Users, UserCheck, UserX, Download, Upload, ArrowUpDown, 
+  PieChart, BarChart3, Search, Trophy, Briefcase, UserPlus
+} from 'lucide-react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import Swal from 'sweetalert2';
+import * as XLSX from 'xlsx';
+
+// 전용 CSS 임포트
+import '../../../assets/css/admin/pages/AdminCommon.css'; 
+
+const UserList = () => {
+  // 1. 상태 관리
+  const [activeTab, setActiveTab] = useState('all');
+  const [allUsers, setAllUsers] = useState([]); // 전체 데이터 (통계용)
+  const [searchTerm, setSearchTerm] = useState(''); 
+  const [finalSearchTerm, setFinalSearchTerm] = useState(''); 
+  const [loading, setLoading] = useState(true);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showCompanyModal, setShowCompanyModal] = useState(false);
+  const [showGeneralModal, setShowGeneralModal] = useState(false);
+  const [sortConfig, setSortConfig] = useState({ key: 'memberName', direction: 'asc' });
+
+  // --- 무한 스크롤 관련 상태 ---
+  const [visibleCount, setVisibleCount] = useState(20); // 현재 보여줄 개수
+  const ITEMS_PER_PAGE = 20;
+
+  // 2. 데이터 로드
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`/api/member/list?type=all`);
+      if (Array.isArray(response.data)) {
+        setAllUsers(response.data);
+      } else {
+        setAllUsers([]);
+      }
+    } catch (error) {
+      console.error("회원 목록 로드 실패:", error);
+      setAllUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  // 탭이나 검색어가 바뀔 때 보여주는 개수 초기화
+  useEffect(() => {
+    setVisibleCount(20);
+  }, [activeTab, finalSearchTerm]);
+
+  // 3. 필터링 로직
+  const filteredUsers = useMemo(() => {
+    let result = [...allUsers];
+
+    if (activeTab === 'general') {
+      result = result.filter(u => u.memberAuthVOList?.some(a => a.auth === 'ROLE_MEMBER') && u.leaveStatus === 'N');
+    } else if (activeTab === 'company') {
+      result = result.filter(u => u.memberAuthVOList?.some(a => a.auth === 'ROLE_CLIENT') && u.leaveStatus === 'N');
+    } else if (activeTab === 'withdrawal') {
+      result = result.filter(u => u.leaveStatus === 'Y');
+    }
+
+    if (finalSearchTerm) {
+      const low = finalSearchTerm.toLowerCase();
+      result = result.filter(u => 
+        u.memberName?.toLowerCase().includes(low) ||
+        u.memberId?.toLowerCase().includes(low) ||
+        u.companyName?.toLowerCase().includes(low)
+      );
+    }
+    return result;
+  }, [allUsers, activeTab, finalSearchTerm]);
+
+  // 4. 정렬 및 무한 스크롤용 데이터 슬라이싱
+  const sortedUsers = useMemo(() => {
+    let items = [...filteredUsers];
+    items.sort((a, b) => {
+      const aVal = a[sortConfig.key] || '';
+      const bVal = b[sortConfig.key] || '';
+      if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return items;
+  }, [filteredUsers, sortConfig]);
+
+  // 실제로 화면에 렌더링될 데이터 (무한 스크롤 적용)
+  const displayUsers = useMemo(() => {
+    return sortedUsers.slice(0, visibleCount);
+  }, [sortedUsers, visibleCount]);
+
+  // 5. 스크롤 이벤트 핸들러 (무한 스크롤 로직)
+  const handleScroll = useCallback(() => {
+    const scrollHeight = document.documentElement.scrollHeight;
+    const scrollTop = document.documentElement.scrollTop;
+    const clientHeight = document.documentElement.clientHeight;
+
+    if (scrollTop + clientHeight >= scrollHeight - 100 && !loading) {
+      if (visibleCount < sortedUsers.length) {
+        setVisibleCount(prev => prev + ITEMS_PER_PAGE);
+      }
+    }
+  }, [visibleCount, sortedUsers.length, loading]);
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
+
+  // 6. 심화 통계 분석
+  const globalStats = useMemo(() => {
+    const total = allUsers.length;
+    if (total === 0) return { total: 0, general: 0, company: 0, topMembers: [], topClients: [], topCos: [] };
+
+    const general = allUsers.filter(u => u.memberAuthVOList?.some(a => a.auth === 'ROLE_MEMBER')).length;
+    const company = allUsers.filter(u => u.memberAuthVOList?.some(a => a.auth === 'ROLE_CLIENT')).length;
+
+    const topMembers = allUsers
+      .filter(u => u.memberAuthVOList?.some(a => a.auth === 'ROLE_MEMBER'))
+      .sort((a, b) => (b.projectCount || 0) - (a.projectCount || 0)).slice(0, 3);
+
+    const topClients = allUsers
+      .filter(u => u.memberAuthVOList?.some(a => a.auth === 'ROLE_CLIENT'))
+      .sort((a, b) => (b.projectCount || 0) - (a.projectCount || 0)).slice(0, 3);
+
+    const coMap = allUsers.reduce((acc, u) => {
+      const name = u.companyName;
+      if (name && name !== '-') acc[name] = (acc[name] || 0) + 1;
+      return acc;
+    }, {});
+    const topCos = Object.entries(coMap)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count).slice(0, 3);
+
+    return { total, general, company, topMembers, topClients, topCos };
+  }, [allUsers]);
+
+  // 7. 핸들러 함수
+  const handleSearch = () => setFinalSearchTerm(searchTerm);
+  const handleKeyPress = (e) => { if (e.key === 'Enter') handleSearch(); };
+
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
+    setSortConfig({ key, direction });
+  };
+
+  const downloadExcel = () => {
+    const data = filteredUsers.map(u => ({
+      '이름': u.memberName, '아이디': u.memberId, '소속': u.companyName || '-', '참여프로젝트': u.projectCount || 0
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "회원목록");
+    XLSX.writeFile(workbook, "Tudio_MemberList.xlsx");
+  };
+
+  const openModal = (user) => {
+    setSelectedUser({ ...user });
+    const isClient = user.memberAuthVOList?.some(a => a.auth === 'ROLE_CLIENT');
+    isClient ? setShowCompanyModal(true) : setShowGeneralModal(true);
+  };
+  const closeModal = () => { setSelectedUser(null); setShowCompanyModal(false); setShowGeneralModal(false); };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setSelectedUser(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSave = async () => {
+    try {
+      await axios.put('/api/member/update', selectedUser);
+      Swal.fire('수정 완료', '회원 정보가 저장되었습니다.', 'success');
+      fetchUsers(); closeModal();
+    } catch (e) { Swal.fire('오류', '저장에 실패했습니다.', 'error'); }
+  };
+
+  const handleDelete = async () => {
+    const res = await Swal.fire({ title: '정말 삭제하시겠습니까?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' });
+    if (res.isConfirmed) {
+      try {
+        await axios.delete(`/api/member/delete/${selectedUser.memberNo}`);
+        Swal.fire('완료', '삭제 처리되었습니다.', 'success');
+        fetchUsers(); closeModal();
+      } catch (e) { Swal.fire('오류', '처리 실패', 'error'); }
+    }
+  };
+
+  return (
+    <div className="admin-content-wrapper meeting-room-scope">
+      
+      {/* 1. 타이틀 영역 */}
+      <div className="admin-title-row d-flex justify-content-between align-items-center mb-4">
+        <h2 className="admin-page-title">
+          <i className="bi bi-people-fill me-2"></i>
+          회원 통합 관리
+        </h2>
+        <div className="d-flex gap-2">
+          <button className="tudio-btn border bg-white shadow-sm" onClick={downloadExcel}><Download size={16} /> 엑셀 다운로드</button>
+          <button className="tudio-btn tudio-btn-primary px-4 shadow-sm" onClick={() => Swal.fire('안내', '준비 중', 'info')}><Plus size={18} /> 신규 회원 등록</button>
+        </div>
+      </div>
+
+      {/* 2. 통계 대시보드 그리드 */}
+      <div className="admin-dashboard-grid mb-5">
+        <div className="admin-stat-card">
+          <div className="stat-header"><i className="bi bi-person-check-fill text-primary-custom"></i> 가입 현황</div>
+          <div className="stat-value-row">
+            <span className="stat-value-big text-primary-custom">{globalStats.total}</span>
+            <span className="text-muted small">명</span>
+          </div>
+          <div className="d-flex justify-content-between mt-2 pt-2 border-top x-small text-muted">
+            <span>일반: <b>{globalStats.general}명</b></span>
+            <span>기업: <b>{globalStats.company}명</b></span>
+          </div>
+        </div>
+
+        <div className="admin-stat-card" style={{ minWidth: '400px' }}>
+          <div className="stat-header"><i className="bi bi-trophy-fill text-warning"></i> 프로젝트 참여 (TOP 3)</div>
+          <div className="row mt-2">
+            <div className="col-6 border-end pe-3">
+              <div className="text-muted x-small fw-bold mb-1">사용자</div>
+              {globalStats.topMembers.map((u, i) => (
+                <div key={u.memberNo} className="d-flex justify-content-between x-small mb-1">
+                  <span>{i+1}. {u.memberName}</span>
+                  <span className="fw-bold text-primary">{u.projectCount}명</span>
+                </div>
+              ))}
+            </div>
+            <div className="col-6 ps-3">
+              <div className="text-muted x-small fw-bold mb-1">기업인원</div>
+              {globalStats.topClients.map((u, i) => (
+                <div key={u.memberNo} className="d-flex justify-content-between x-small mb-1">
+                  <span className="text-truncate">{i+1}. {u.companyName || u.memberName}</span>
+                  <span className="fw-bold text-info">{u.projectCount}명</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="admin-stat-card">
+          <div className="stat-header"><i className="bi bi-briefcase-fill text-info"></i> 업체별 규모 (TOP 3)</div>
+          <div className="mt-2">
+            {globalStats.topCos.map((co, i) => (
+              <div key={co.name} className="mb-2">
+                <div className="d-flex justify-content-between x-small mb-1">
+                  <span className="text-truncate" style={{maxWidth:'70%'}}>{i+1}. {co.name}</span>
+                  <span className="fw-bold text-info">{co.count}명</span>
+                </div>
+                <div className="progress" style={{ height: '4px' }}>
+                  <div className="progress-bar bg-info" style={{ width: `${(co.count/globalStats.total)*100}%` }}></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* 3. 탭 필터 영역 */}
+      <div className="filter-tabs mb-3">
+        {['all', 'general', 'company', 'withdrawal'].map(tab => (
+          <button
+            key={tab}
+            className={`filter-btn ${activeTab === tab ? 'active' : ''}`}
+            onClick={() => setActiveTab(tab)}
+          >
+            {tab === 'all' ? '전체 회원' : tab === 'general' ? '사용자' : tab === 'company' ? '기업' : '탈퇴'}
+          </button>
+        ))}
+      </div>
+
+      {/* 4. 목록 영역 (카운트 표시 및 분리형 검색 버튼) */}
+      <div className="admin-common-box flex-grow-1 d-flex flex-column overflow-hidden shadow-sm">
+        <div className="p-4 bg-white border-bottom">
+          <div className="d-flex justify-content-between align-items-center">
+            {/* [요청사항] 카운트 표시 추가 */}
+            <h4 className="m-0" style={{fontSize: '1.1rem', fontWeight: '700'}}>
+              <i className="bi bi-list-ul me-2"></i>상세 목록 
+              <span className="text-primary ms-2" style={{fontSize: '0.9rem', fontWeight: '500'}}>
+                {finalSearchTerm ? `검색 결과 ${sortedUsers.length}명` : `전체 ${sortedUsers.length}명`}
+              </span>
+            </h4>
+            
+            {/* 검색바와 버튼 분리 레이아웃 */}
+            <div className="d-flex gap-2">
+              <div className="position-relative" style={{ width: '280px' }}>
+                <Search className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" size={16} />
+                <input type="text" className="form-control ps-5 rounded-pill border-light bg-light" 
+                       style={{ height: '42px', fontSize: '0.9rem' }}
+                       placeholder="이름, 아이디, 소속 검색..." value={searchTerm} 
+                       onChange={(e) => setSearchTerm(e.target.value)} onKeyPress={handleKeyPress} />
+              </div>
+              <button className="tudio-btn tudio-btn-primary px-4 rounded-pill shadow-sm" 
+                      onClick={handleSearch}>검색</button>
+            </div>
+          </div>
+        </div>
+
+        <div className="card-body p-0">
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0" style={{ tableLayout: 'fixed', minWidth: '1100px' }}>
+              <thead>
+                <tr>
+                  <th className="ps-4" style={{ width: '100px' }}>유형</th>
+                  <th style={{ width: '25%', cursor: 'pointer' }} onClick={() => handleSort('memberName')}>사용자 정보 <ArrowUpDown size={14} className="ms-1" /></th>
+                  <th style={{ width: '20%', cursor: 'pointer' }} onClick={() => handleSort('companyName')}>소속 / 회사 <ArrowUpDown size={14} className="ms-1" /></th>
+                  <th style={{ width: '15%', cursor: 'pointer' }} onClick={() => handleSort('projectCount')}>참여 현황 <ArrowUpDown size={14} className="ms-1" /></th>
+                  <th style={{ width: '15%' }}>최근 접속일</th>
+                  <th style={{ width: '10%' }}>상태</th>
+                  <th className="text-center pe-4" style={{ width: '80px' }}>관리</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr><td colSpan="7" className="text-center py-5">데이터 로딩 중...</td></tr>
+                ) : displayUsers.length === 0 ? (
+                  <tr><td colSpan="7" className="text-center py-5 text-muted">결과가 없습니다.</td></tr>
+                ) : (
+                  displayUsers.map((user) => (
+                    <tr key={user.memberNo}>
+                      <td className="ps-4">
+                        <span className={`badge rounded-pill border px-2 py-1 ${user.memberAuthVOList?.some(a => a.auth === 'ROLE_CLIENT') ? 'bg-info bg-opacity-10 text-info border-info' : 'bg-secondary bg-opacity-10 text-secondary border-secondary'}`}>
+                          {user.memberAuthVOList?.some(a => a.auth === 'ROLE_CLIENT') ? '기업' : '일반'}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="d-flex align-items-center">
+                          <div className="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3 text-primary fw-bold" style={{ width: '38px', height: '38px' }}>
+                            {user.memberName?.charAt(0)}
+                          </div>
+                          <div className="overflow-hidden">
+                            <div className="fw-bold text-dark text-truncate">{user.memberName}</div>
+                            <div className="text-muted x-small text-truncate">{user.memberId}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="text-truncate">
+                        <div className="text-dark fw-medium text-truncate">{user.companyName || '-'}</div>
+                        <div className="text-muted x-small text-truncate">{user.memberDepartment} {user.memberPosition}</div>
+                      </td>
+                      <td>
+                        <div className="small">
+                          <span className="d-block text-dark">참여 프로젝트 <b className="text-primary">{user.projectCount || 0}</b>명</span>
+                          <span className="text-muted x-small">가입: {user.memberJoinDate?.split(' ')[0]}</span>
+                        </div>
+                      </td>
+                      <td><div className="small text-muted">{user.lastLoginDate ? user.lastLoginDate.split(' ')[0] : '기록 없음'}</div></td>
+                      <td>
+                        <span className={`badge bg-opacity-10 px-2 py-1 ${user.leaveStatus === 'Y' ? 'bg-danger text-danger' : 'bg-success text-success'}`}>
+                          {user.leaveStatus === 'Y' ? '탈퇴' : '활성'}
+                        </span>
+                      </td>
+                      <td className="text-center pe-4">
+                        <button className="tudio-btn border shadow-sm p-1 rounded-circle" onClick={() => openModal(user)}><Settings size={16} /></button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+                {/* 무한 스크롤 로딩 표시 */}
+                {visibleCount < sortedUsers.length && (
+                  <tr><td colSpan="7" className="text-center py-3 text-muted small">스크롤하여 더 보기...</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* 모달: 일반 회원 */}
+      {showGeneralModal && selectedUser && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered modal-lg">
+            <div className="modal-content shadow-lg border-0 rounded-4">
+              <div className="modal-header bg-dark text-white rounded-top-4 px-4">
+                <h5 className="modal-title fw-bold">회원 프로필 상세 수정</h5>
+                <button type="button" className="btn-close btn-close-white" onClick={closeModal}></button>
+              </div>
+              <div className="modal-body p-4">
+                <div className="row g-3">
+                  <div className="col-md-6"><label className="form-label small fw-bold">아이디</label><input type="text" className="form-control bg-light" value={selectedUser.memberId} readOnly /></div>
+                  <div className="col-md-6"><label className="form-label small fw-bold">이름</label><input type="text" className="form-control" name="memberName" value={selectedUser.memberName || ''} onChange={handleInputChange} /></div>
+                  <div className="col-md-6"><label className="form-label small fw-bold">이메일</label><input type="email" className="form-control" name="memberEmail" value={selectedUser.memberEmail || ''} onChange={handleInputChange} /></div>
+                  <div className="col-md-6"><label className="form-label small fw-bold">연락처</label><input type="text" className="form-control" name="memberTel" value={selectedUser.memberTel || ''} onChange={handleInputChange} /></div>
+                  <div className="col-md-6 border-top pt-3 mt-3"><label className="form-label small fw-bold">소속 회사명</label><input type="text" className="form-control" name="companyName" value={selectedUser.companyName || ''} onChange={handleInputChange} /></div>
+                  <div className="col-md-6 border-top pt-3 mt-3">
+                    <label className="form-label small fw-bold">부서/직급</label>
+                    <div className="input-group">
+                      <input type="text" className="form-control" name="memberDepartment" value={selectedUser.memberDepartment || ''} placeholder="부서" onChange={handleInputChange} />
+                      <input type="text" className="form-control" name="memberPosition" value={selectedUser.memberPosition || ''} placeholder="직급" onChange={handleInputChange} />
+                    </div>
+                  </div>
+                  <div className="col-md-6"><label className="form-label small fw-bold">계정 상태</label>
+                    <select className="form-select" name="leaveStatus" value={selectedUser.leaveStatus || 'N'} onChange={handleInputChange}>
+                      <option value="N">정상 활성</option><option value="Y">탈퇴/중지</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer justify-content-between bg-light rounded-bottom-4 px-4">
+                <button className="tudio-btn border bg-white text-danger" onClick={handleDelete}><Trash2 size={16}/> 영구 삭제</button>
+                <div className="d-flex gap-2">
+                  <button className="tudio-btn border bg-white" onClick={closeModal}>취소</button>
+                  <button className="tudio-btn tudio-btn-primary px-4" onClick={handleSave}>수정 내역 저장</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 모달: 기업 회원 */}
+      {showCompanyModal && selectedUser && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered modal-lg">
+            <div className="modal-content shadow-lg border-0 rounded-4">
+              <div className="modal-header bg-primary text-white rounded-top-4 px-4">
+                <h5 className="modal-title fw-bold">기업 상세 정보 관리</h5>
+                <button type="button" className="btn-close btn-close-white" onClick={closeModal}></button>
+              </div>
+              <div className="modal-body p-4">
+                 <div className="row g-4">
+                    <div className="col-md-12"><label className="form-label small fw-bold text-muted">소속 회사명</label><input type="text" className="form-control form-control-lg fw-bold" name="companyName" value={selectedUser.companyName || ''} onChange={handleInputChange} /></div>
+                    <div className="col-md-6"><label className="form-label small fw-bold text-muted">담당자 성함</label><input type="text" className="form-control" name="memberName" value={selectedUser.memberName || ''} onChange={handleInputChange} /></div>
+                    <div className="col-md-6"><label className="form-label small fw-bold text-muted">담당자 연락처</label><input type="text" className="form-control" name="memberTel" value={selectedUser.memberTel || ''} onChange={handleInputChange} /></div>
+                    <div className="col-md-6"><label className="form-label small fw-bold text-muted">운영 상태</label>
+                      <select className="form-select" name="leaveStatus" value={selectedUser.leaveStatus || 'N'} onChange={handleInputChange}>
+                        <option value="N">계약 유지 중</option><option value="Y">비활성/종료</option>
+                      </select>
+                    </div>
+                 </div>
+              </div>
+              <div className="modal-footer bg-light rounded-bottom-4 px-4">
+                <button className="tudio-btn border bg-white" onClick={closeModal}>취소</button>
+                <button className="tudio-btn tudio-btn-primary px-4" onClick={handleSave}>기업 정보 저장</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default UserList;

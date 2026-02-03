@@ -1,0 +1,131 @@
+/* src/pages/admin/survey/Survey.css */
+
+/* .survey-scope는 AdminCommon 내부에서 설문 전용 컴포넌트를 꾸미는 용도 */
+.survey-scope {
+    --s-primary: #3182CE; 
+    --s-primary-dark: #2C5282;
+}
+
+/* ================= [1. 테이블 스타일] ================= */
+.survey-scope .survey-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 15px;
+}
+
+.survey-scope .survey-table th {
+    background-color: #F8FAFC;
+    padding: 16px;
+    font-weight: 600;
+    color: #718096;
+    text-align: center;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.survey-scope .survey-table td {
+    padding: 16px;
+    border-bottom: 1px solid #E2E8F0;
+    color: #2D3748;
+    vertical-align: middle;
+}
+
+.survey-scope .survey-table tr:hover td {
+    background-color: #F8FAFC;
+}
+
+/* 링크 & 배지 & 버튼 */
+.survey-scope .survey-link {
+    font-weight: 700;
+    color: var(--s-primary);
+    cursor: pointer;
+    text-decoration: none;
+}
+.survey-scope .survey-link:hover { text-decoration: underline; }
+
+.survey-scope .survey-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    height: 30px; padding: 0 12px; border-radius: 6px;
+    font-size: 13px; font-weight: 700;
+}
+.survey-scope .status-running { background: #EBF8FF; color: #3182CE; border: 1px solid #BEE3F8; }
+.survey-scope .status-closed { background: #FFF5F5; color: #E53E3E; border: 1px solid #FED7D7; }
+
+.survey-scope .btn-create-list {
+    background-color: var(--s-primary);
+    color: white; border: none; padding: 10px 20px;
+    border-radius: 8px; font-weight: 700; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+}
+.survey-scope .btn-create-list:hover {
+    background-color: var(--s-primary-dark); transform: translateY(-2px);
+}
+
+/* ================= [2. 폼(Form) 스타일] ================= */
+.survey-scope .survey-form-card {
+    padding: 50px;
+    border-top: 6px solid var(--s-primary);
+}
+
+.survey-scope .survey-header {
+    margin-bottom: 40px; border-bottom: 2px dashed #E2E8F0; padding-bottom: 30px;
+}
+
+.survey-scope .survey-input, 
+.survey-scope .survey-textarea {
+    width: 100%; padding: 14px; border: 1px solid #CBD5E0;
+    border-radius: 8px; font-size: 16px; outline: none; margin-bottom: 12px;
+}
+.survey-scope .survey-input:focus, 
+.survey-scope .survey-textarea:focus {
+    border-color: var(--s-primary); box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+}
+
+.survey-scope .title-input { font-size: 24px; font-weight: 800; color: var(--s-primary-dark); }
+.survey-scope .desc-input { min-height: 120px; resize: vertical; }
+
+.survey-scope .date-row {
+    display: flex; gap: 20px; margin-top: 20px; padding: 20px;
+    background-color: #F8FAFC; border-radius: 12px;
+}
+.survey-scope .date-group { flex: 1; }
+.survey-scope .date-group label { display: block; font-weight: 700; color: #718096; margin-bottom: 8px; }
+
+/* 질문 박스 */
+.survey-scope .question-box {
+    background: #fff; border: 1px solid #E2E8F0; padding: 30px;
+    border-radius: 16px; margin-bottom: 24px; position: relative;
+}
+.survey-scope .q-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.survey-scope .q-num {
+    background: var(--s-primary); color: #fff; width: 32px; height: 32px;
+    border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 800;
+}
+.survey-scope .q-input { border: none; border-bottom: 2px solid #E2E8F0; font-weight: 700; font-size: 18px; }
+
+/* 옵션 리스트 */
+.survey-scope .option-list { padding-left: 44px; display: flex; flex-direction: column; gap: 10px; }
+.survey-scope .option-item { display: flex; align-items: center; gap: 10px; }
+.survey-scope .option-radio-deco { width: 20px; height: 20px; border: 2px solid #CBD5E0; border-radius: 50%; }
+.survey-scope .option-input { background: #F7FAFC; border: 1px solid transparent; }
+
+/* 버튼들 */
+.survey-scope .btn-icon { background: none; border: none; color: #A0AEC0; cursor: pointer; font-size: 18px; }
+.survey-scope .btn-delete-q { position: absolute; top: 25px; right: 25px; }
+.survey-scope .btn-add-option { margin-left: 44px; background: none; border: none; color: var(--s-primary); font-weight: 700; cursor: pointer; }
+.survey-scope .btn-add-question {
+    width: 100%; padding: 20px; background: #EBF8FF; color: var(--s-primary-dark);
+    border: 2px dashed #BEE3F8; border-radius: 12px; font-weight: 700; cursor: pointer; margin-bottom: 40px;
+}
+
+/* 폼 하단 버튼 */
+.survey-scope .form-actions { display: flex; gap: 15px; margin-top: 30px; }
+.survey-scope .btn-submit { flex: 2; padding: 16px; background: var(--s-primary); color: #fff; border: none; border-radius: 10px; font-weight: 700; }
+.survey-scope .btn-cancel { flex: 1; padding: 16px; background: #EDF2F7; color: #2D3748; border: none; border-radius: 10px; font-weight: 700; }
+
+/* 결과 화면용 (progress bar 등) */
+.survey-scope .result-header { margin-bottom: 40px; text-align: center; border-bottom: 2px dashed #E2E8F0; padding-bottom: 30px; }
+.survey-scope .result-title { font-size: 28px; font-weight: 800; color: var(--s-primary-dark); }
+.survey-scope .stat-card { background: #fff; border: 1px solid #E2E8F0; padding: 24px; border-radius: 16px; margin-bottom: 20px; }
+.survey-scope .stat-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; color: #2D3748; }
+.survey-scope .progress-bg { background: #EDF2F7; height: 12px; border-radius: 6px; overflow: hidden; margin-top: 8px; }
+.survey-scope .progress-bar { height: 100%; background: var(--s-primary); border-radius: 6px; transition: width 1s ease; }

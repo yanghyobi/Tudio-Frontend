@@ -1,0 +1,123 @@
+@charset "UTF-8";
+
+/* 1. 기본 바디 설정 (기존 레이아웃과 충돌 방지를 위해 배경색만 지정 추천) */
+body {
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    font-family: 'Pretendard', sans-serif;
+}
+
+/* 2. 유틸리티 클래스 */
+.text-primary-dark { color: var(--dark-navy) !important; }
+.bg-light-blue { background-color: var(--header-blue) !important; }
+.text-danger-custom { color: #ef4444 !important; }
+
+/* 3. 공통 레이아웃/탭 스타일 */
+.custom-index-tabs { gap: 2px; padding-left: 0; }
+.custom-index-tabs .nav-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    background-color: #f1f3f5;
+    border: 1px solid var(--border-blue) !important;
+    border-bottom: none !important;
+    border-radius: 10px 10px 0 0;
+    color: #64748b; padding: 12px 18px; margin-right: 4px;
+}
+.custom-index-tabs .nav-link.active {
+    background-color: #ffffff !important;
+    color: var(--main-blue) !important;
+    font-weight: 700 !important;
+    border-color: var(--border-blue) !important;
+    border-bottom-color: #ffffff !important;
+    position: relative; z-index: 5; margin-bottom: -1px;
+}
+.tab-content-card {
+    background: #fff;
+    border: 1px solid var(--border-blue);
+    border-radius: 0 8px 8px 8px;
+    margin-top: -1px; padding: 24px;
+}
+
+/* 4. 게시판/리스트 공통 */
+.board-tabs { display: inline-flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.board-tabs .tab {
+    border: 1px solid #e6edf6; background: #fff;
+    padding: 7px 16px; border-radius: 999px;
+    font-size: 13px; color: #495057; font-weight: 500; transition: .15s ease;
+}
+.board-tabs .tab.is-active {
+    border-color: #0d6efd; background: rgba(13, 110, 253, .08);
+    color: #0d6efd; font-weight: 700;
+}
+
+/* 5. 테이블 스타일 */
+.table { font-size: 0.95rem; border-collapse: separate; }
+.table thead th {
+    font-weight: 700; color: #495057; padding: 15px 10px;
+    background-color: #f8f9fa !important; border-bottom: 2px solid #eef2f7;
+}
+.table tbody tr { transition: all 0.2s ease; }
+.table tbody tr:hover { background-color: #fcfdfe !important; transform: scale(1.002); }
+.table tbody td {
+    padding: 16px 10px; border-bottom: 1px solid #f1f5f9; color: #495057;
+}
+
+/* 6. 카드 공통 (Tudio Card) */
+.tudio-card, .calendar-wrapper, .filter-wrapper {
+    background: #ffffff;
+    border: 1px solid var(--border-blue) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 12px rgba(0, 64, 127, 0.05) !important;
+}
+
+/* 7. Tudio 공통 버튼 및 입력폼 */
+.tudio-btn {
+    border: 1px solid transparent; background: transparent;
+    border-radius: var(--tudio-radius-md); padding: 10px 14px;
+    font-size: 13px; font-weight: 600; display: inline-flex;
+    align-items: center; gap: 8px; transition: var(--tudio-ease); cursor: pointer;
+}
+.tudio-btn-primary {
+    background: var(--tudio-primary-strong); color: #fff;
+    box-shadow: 0 10px 18px rgba(47, 107, 255, .18);
+}
+.tudio-btn-primary:hover { transform: translateY(-1px); }
+
+.tudio-btn-block {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;         
+    padding: 14px 0;        
+    border-radius: 12px;   
+    font-size: 1rem;       
+    font-weight: 700;        
+    gap: 8px;               
+    transition: all 0.2s ease; 
+    border: none;           
+    cursor: pointer;
+}
+
+/* 메인 파란색 (Primary) - 저장, 등록, 로그인 등 */
+.tudio-btn-block.primary {
+    background-color: var(--main-blue); /* #3B82F6 */
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.tudio-btn-block.primary:hover {
+    background-color: var(--dark-navy); /* #00407F */
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+/* 회색/취소색 (Secondary) - 취소, 닫기 등 (필요할 때 사용) */
+.tudio-btn-block.secondary {
+    background-color: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+}
+
+.tudio-btn-block.secondary:hover {
+    background-color: #e2e8f0;
+    color: #334155;
+}

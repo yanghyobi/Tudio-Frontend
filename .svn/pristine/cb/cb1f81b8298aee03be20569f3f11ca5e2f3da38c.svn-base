@@ -1,0 +1,361 @@
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import axios from 'axios';
+import { Users, LogIn, ShieldAlert, Activity } from 'lucide-react';
+import { 
+  ShieldCheck, Search, ChevronRight,
+  Monitor, Smartphone, Globe, AlertCircle, CheckCircle2, FileSpreadsheet
+} from 'lucide-react';
+
+import Pagination from '../../../components/common/Pagination';
+
+const LogLogin = () => {
+  const [querySearchParams, setQuerySearchParams] = useSearchParams();
+  const currentPage = parseInt(querySearchParams.get('page')) || 1;
+
+  const [logs, setLogs] = useState([]);
+  const [pageInfo, setPageInfo] = useState(null);
+
+  const stats = {
+    totalCount: pageInfo?.totalRecord || 0,
+    successCount: 0, 
+    failCount: 0,   
+    activeUsers: 0   
+  };
+
+  // 날짜 필터용 상태
+  const today = new Date().toISOString().split('T')[0];
+  const [filters, setFilters] = useState({
+    startDate: today,
+    endDate: today,
+    condition: 'all',
+    keyword: '',
+    status: 'all'
+  });
+
+  useEffect(() => {
+    fetchLogs();
+  }, [currentPage]);
+
+  const fetchLogs = async () => {
+    try {
+
+      const params = {
+        page: currentPage, 
+        searchType: filters.condition, 
+        searchWord: filters.keyword,  
+        ...filters
+      };
+
+      const response = await axios.get('/api/log/login/list', {params});
+
+      console.log("서버 응답 데이터:", response.data);
+
+      const dataList = response.data.dataList || [];
+      const pi = response.data.pageInfo; 
+
+      setLogs(dataList);
+      setPageInfo(pi);
+
+    } catch (error) {
+      console.error("로그 목록 불러오기 실패:", error);
+    }
+  };
+
+  const handlePageChange = (pageNum) => {
+    setQuerySearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set('page', pageNum);
+      return next;
+    });
+  };
+
+  const handleSearch = () => {
+    setQuerySearchParams({ page: 1 });
+    if(currentPage === 1) fetchLogs();
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') handleSearch();
+  };
+
+  const handleDownload = () => {
+    const total = pageInfo?.totalRecord || 0;
+    if(window.confirm(`현재 조회된 ${total}건의 로그를 엑셀로 다운로드 하시겠습니까?`)) {
+        alert('엑셀 다운로드가 시작되었습니다.');
+    }
+  };
+
+  // OS 추측 함수
+  const parseOs = (userAgent) => {
+    if (!userAgent) return "Unknown OS";
+    const ua = userAgent.toLowerCase();
+    if (ua.includes("windows")) return "Windows";
+    if (ua.includes("mac")) return "Mac OS";
+    if (ua.includes("linux")) return "Linux";
+    if (ua.includes("android")) return "Android";
+    if (ua.includes("iphone") || ua.includes("ipad")) return "iOS";
+    return "Other";
+  };
+
+  // OS 아이콘 헬퍼
+  const getOsIcon = (osName) => {
+    const name = osName.toLowerCase();
+    if (name.includes('windows') || name.includes('mac') || name.includes('linux')) return <Monitor size={14}/>;
+    if (name.includes('android') || name.includes('ios')) return <Smartphone size={14}/>;
+    return <Globe size={14}/>;
+  };
+
+  // 날짜 포맷팅 
+  const formatDate = (dateString) => {
+    if (!dateString) return "-";
+
+    // 1. 날짜 파싱 
+    let date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      let isoString = dateString.replace(' ', 'T');
+      date = new Date(isoString);
+    }
+    if (isNaN(date.getTime())) return dateString;
+
+    // 2. 날짜/시간 직접 추출
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hour = String(date.getHours()).padStart(2, '0');
+    const minute = String(date.getMinutes()).padStart(2, '0');
+    const second = String(date.getSeconds()).padStart(2, '0');
+
+    return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+  };
+
+  return (
+    <div className="flex-grow-1 p-5 d-flex flex-column h-100">
+      
+      {/* 1. Breadcrumb & Header */}
+      <div className="mb-4">
+        <nav className="text-muted small mb-2 d-flex align-items-center gap-2">
+          <span>Admin</span> <ChevronRight size={12} /> 
+          <span>로그 관리</span> <ChevronRight size={12} />
+          <span className="text-primary fw-bold">로그인 로그</span>
+        </nav>
+        <h2 className="fw-bold text-dark m-0 d-flex align-items-center gap-2">
+          <ShieldCheck size={24} className="text-primary" /> 로그인 이력 조회
+        </h2>
+      </div>
+
+      <div className="summary-container">
+        {/* 전체 로그인 시도 */}
+        <div className="summary-card">
+          <span className="summary-label text-primary-custom">
+            <LogIn size={16} /> 전체 접속 시도
+          </span>
+          <div className="d-flex align-items-baseline">
+            <div className="summary-value me-2">{stats.totalCount.toLocaleString()}</div>
+            <span className="text-muted small">건</span>
+          </div>
+          <span className="small text-muted mt-1">조회 범위 내 총 로그 수</span>
+        </div>
+
+        {/* 로그인 성공 */}
+        <div className="summary-card">
+          <span className="summary-label text-success">
+            <CheckCircle2 size={16} /> 로그인 성공
+          </span>
+          <div className="d-flex align-items-baseline">
+            <div className="summary-value text-success me-2">
+              {/* API에서 값을 주지 않을 경우 임시로 SUCCESS 로그만 필터링한 개수를 쓸 수도 있습니다 */}
+              {logs.filter(l => l.loginStatus === 'SUCCESS').length} 
+            </div>
+            <span className="text-muted small">건</span>
+          </div>
+          <span className="small text-muted mt-1">정상적으로 인증된 이력</span>
+        </div>
+
+        {/* 로그인 실패 */}
+        <div className="summary-card">
+          <span className="summary-label text-danger-custom">
+            <ShieldAlert size={16} /> 로그인 실패
+          </span>
+          <div className="d-flex align-items-baseline">
+            <div className="summary-value text-danger-custom me-2">
+              {logs.filter(l => l.loginStatus === 'FAIL').length}
+            </div>
+            <span className="text-muted small">건</span>
+          </div>
+          <span className="small text-danger-custom mt-1">보안 주의 및 패스워드 오류</span>
+        </div>
+
+        {/* 활성 사용자 (IP 기준) */}
+        <div className="summary-card">
+          <span className="summary-label text-warning-custom">
+            <Activity size={16} /> 접속 IP 종류
+          </span>
+          <div className="d-flex align-items-baseline">
+            <div className="summary-value text-warning-custom me-2">
+              {new Set(logs.map(l => l.ipAddr)).size}
+            </div>
+            <span className="text-muted small">개</span>
+          </div>
+          <span className="small text-muted mt-1">중복을 제외한 고유 IP</span>
+        </div>
+      </div>
+
+      {/* 2. 검색 필터 영역 (상단 카드) */}
+      <div className="card border-0 shadow-sm rounded-3 mb-4 bg-white">
+        <div className="card-body bg-light rounded-3 p-4">
+            <div className="row g-3 align-items-end">
+                <div className="col-md-4">
+                    <label className="form-label fw-bold small text-muted">조회 기간</label>
+                    <div className="input-group">
+                        <input 
+                            type="date" 
+                            className="form-control" 
+                            value={filters.startDate}
+                            onChange={(e) => setFilters({...filters, startDate: e.target.value})}
+                        />
+                        <span className="input-group-text bg-white border-start-0 border-end-0">~</span>
+                        <input 
+                            type="date" 
+                            className="form-control"
+                            value={filters.endDate}
+                            onChange={(e) => setFilters({...filters, endDate: e.target.value})}
+                        />
+                    </div>
+                </div>
+                
+                <div className="col-md-5">
+                    <label className="form-label fw-bold small text-muted">검색어</label>
+                    <input 
+                        type="text" 
+                        className="form-control" 
+                        placeholder="검색어를 입력하세요"
+                        value={filters.keyword}
+                        onChange={(e) => setFilters({...filters, keyword: e.target.value})}
+                        onKeyDown={handleKeyDown}
+                    />
+                </div>
+
+                <div className="col-md-2">
+                    <label className="form-label fw-bold small text-muted">로그인 상태</label>
+                    <select className="form-select" value={filters.status} onChange={(e) => setFilters({...filters, status: e.target.value})}>
+                        <option value="all">전체</option>
+                        <option value="SUCCESS">성공</option> {/* 대문자 수정 */}
+                        <option value="FAIL">실패</option>   {/* 대문자 수정 */}
+                    </select>
+                </div>
+
+                <div className="col-md-1">
+                    <button type="button" className="btn btn-primary w-100" onClick={handleSearch}>
+                        <Search size={18} />
+                    </button>
+                </div>
+            </div>
+        </div>
+      </div>
+
+      {/* 3. 리스트 영역 (하단 카드) */}
+      <div className="flex-grow-1 card border-0 shadow-sm rounded-3 overflow-hidden d-flex flex-column bg-white">
+        
+        {/* 카드 헤더 */}
+        <div className="p-3 border-bottom d-flex justify-content-between align-items-center bg-white">
+           <div>
+             <h5 className="fw-bold mb-1">📋 로그인 이력 목록</h5>
+             <small className="text-muted">
+                총 <span className="text-primary fw-bold">{pageInfo?.totalRecord || 0}</span>건의 로그가 검색되었습니다. 
+             </small>
+           </div>
+           <button className="btn btn-success btn-sm d-flex align-items-center gap-2 fw-bold px-3" onClick={handleDownload}>
+             <FileSpreadsheet size={16}/> 엑셀 다운로드
+           </button>
+        </div>
+
+        {/* 테이블 */}
+        <div className="table-responsive flex-grow-1">
+          <table className="table table-hover align-middle mb-0">
+            <thead className="bg-light text-muted small text-uppercase">
+              <tr>
+                <th className="text-center py-3" style={{width:'60px'}}>No</th>
+                <th className="ps-3 py-3">접속 일시</th>
+                <th className="py-3">사용자 (ID)</th>
+                <th className="py-3">접속 IP</th>
+                <th className="py-3">OS / 브라우저</th>
+                <th className="text-center py-3">상태</th>
+                <th className="py-3">비고 (실패 사유)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {logs && Array.isArray(logs) && logs.map((log, index) => {
+                const osName = parseOs(log.userAgent);
+                const formattedDate = formatDate(log.regDate);
+
+                const total = pageInfo?.totalRecord || 0;
+                const current = pageInfo?.currentPage || 1;
+                const size = pageInfo?.rowSize || 10;
+
+                const rowNo = total > 0 
+                  ? total - ((current - 1) * size) - index 
+                  : index + 1;
+                
+                return (
+                <tr key={log.loginLogId ?? index}> 
+                    <td className="text-center text-muted small">{rowNo}</td>
+                  
+                  {/* 날짜와 시간 두 줄로 배치 */}
+                  <td className="ps-3 text-muted small number-font">
+                    <div>{formattedDate.split(' ')[0]}</div>
+                    <div className="text-secondary" style={{fontSize: '0.85em'}}>
+                        {formattedDate.split(' ')[1]}
+                    </div>
+                  </td>
+
+                  <td className="fw-bold text-dark">{log.loginId}</td>
+                  <td className="text-secondary small number-font">{log.ipAddr}</td>
+                  <td>
+                    <div className="d-flex align-items-center gap-2 small text-muted">
+                       {getOsIcon(osName)}
+                       {osName} / {log.browser}
+                    </div>
+                  </td>
+                  <td className="text-center">
+                    {log.loginStatus === 'SUCCESS' ? (
+                      <span className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3">
+                        <CheckCircle2 size={12} className="me-1"/> 성공
+                      </span>
+                    ) : (
+                      <span className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-3">
+                        <AlertCircle size={12} className="me-1"/> 실패
+                      </span>
+                    )}
+                  </td>
+                  <td className="text-muted small">
+                    {log.loginStatus !== 'SUCCESS' ? <span className="text-danger">{log.failReason}</span> : '-'}
+                  </td>
+                </tr>
+              )})}
+              
+              {logs.length === 0 && (
+                <tr>
+                    <td colSpan="7" className="text-center py-5 text-muted">
+                        <div className="d-flex flex-column align-items-center">
+                            <AlertCircle size={40} className="text-muted mb-2 opacity-50"/>
+                            <span>데이터가 없습니다.</span>
+                        </div>
+                    </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {pageInfo && logs.length > 0 && (
+            <div className="p-4 border-top">
+                <Pagination pageInfo={pageInfo} onPageChange={handlePageChange} />
+            </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default LogLogin;

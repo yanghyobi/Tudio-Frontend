@@ -1,0 +1,233 @@
+import axios from 'axios';
+import { 
+  Activity, ChevronRight, Edit, FileSpreadsheet, PlusCircle, 
+  Search, Trash2, Calendar, Hash, ArrowUpDown
+} from 'lucide-react';
+import React, { useEffect, useState, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import Pagination from '../../../components/common/Pagination';
+import * as XLSX from 'xlsx';
+
+// Tudio 전용 공통 CSS 임포트
+import '../../../assets/css/admin/pages/AdminCommon.css';
+
+const LogAction = () => {
+  // 1. 상태 관리
+  const [querySearchParams, setQuerySearchParams] = useSearchParams();
+  const currentPage = parseInt(querySearchParams.get('page')) || 1;
+  const [logs, setLogs] = useState([]);
+  const [pageInfo, setPageInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const today = new Date().toISOString().split('T')[0];
+  const [filters, setFilters] = useState({ startDate: today, endDate: today, keyword: '' });
+  const [activeTab, setActiveTab] = useState('all'); // all, INSERT, UPDATE, DELETE
+  const [finalKeyword, setFinalKeyword] = useState(''); // 검색 버튼 클릭 시 적용될 키워드
+
+  // 2. 데이터 로드 (필터링 반영)
+  const fetchLogs = async () => {
+    setLoading(true);
+    try {
+      const params = { 
+        page: currentPage, 
+        searchWord: finalKeyword, 
+        startDate: filters.startDate, 
+        endDate: filters.endDate,
+        actionType: activeTab === 'all' ? '' : activeTab
+      };
+      const response = await axios.get('/api/log/action/list', { params });
+      setLogs(response.data.dataList || []);
+      setPageInfo(response.data.pageInfo);
+    } catch (error) {
+      console.error("로그 조회 실패:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLogs();
+  }, [currentPage, finalKeyword, activeTab]);
+
+  // 3. 상단 통계 (UserList와 동일한 4개 카드 한 줄 구성)
+  const stats = useMemo(() => ({
+    total: pageInfo?.totalRecord || 0,
+    insertCount: logs.filter(l => l.actionType === 'INSERT').length, // 샘플 통계
+    updateCount: logs.filter(l => l.actionType === 'UPDATE').length,
+    deleteCount: logs.filter(l => l.actionType === 'DELETE').length
+  }), [logs, pageInfo]);
+
+  // 4. 핸들러 함수
+  const handleSearch = () => {
+    setFinalKeyword(filters.keyword);
+  };
+
+  const handleKeyPress = (e) => { if (e.key === 'Enter') handleSearch(); };
+
+  const downloadExcel = () => {
+    const data = logs.map((l, i) => ({
+      'No': (pageInfo?.totalRecord || 0) - i, '발생일시': l.regDate, '메뉴명': l.menuName, '유형': l.actionType, '메시지': l.actionMsg
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "ActionLogs");
+    XLSX.writeFile(workbook, "Tudio_ActionLog.xlsx");
+  };
+
+  const getActionBadge = (type) => {
+    const map = { 'INSERT': 'success', 'UPDATE': 'primary', 'DELETE': 'danger' };
+    return <span className={`badge bg-${map[type] || 'secondary'} bg-opacity-10 text-${map[type] || 'secondary'} border border-${map[type] || 'secondary'} border-opacity-25 rounded-pill px-3`}>{type}</span>;
+  };
+
+  return (
+    <div className="admin-content-wrapper meeting-room-scope">
+      
+      {/* A. 상단 제목 영역 */}
+      <div className="admin-title-row d-flex justify-content-between align-items-end mb-4">
+        <div>
+          <nav className="text-muted small mb-2 d-flex align-items-center gap-2">
+            <span>Admin</span> <ChevronRight size={12} /> <span>로그 관리</span> <ChevronRight size={12} /> <span className="text-primary fw-bold">액션 로그</span>
+          </nav>
+          <h2 className="fw-bold text-dark m-0">액션 로그 조회</h2>
+        </div>
+        <div className="d-flex gap-2">
+          <button className="tudio-btn border bg-white shadow-sm" onClick={downloadExcel}><FileSpreadsheet size={16} className="me-2 text-success" /> 엑셀 다운로드</button>
+        </div>
+      </div>
+
+      <div className="admin-dashboard-grid">
+        <div className="row g-4 mb-5">
+          <div className="col-md-3">
+            <div className="tudio-card p-4 shadow-sm border-0 bg-white rounded-4 h-100">
+              <span className="text-primary fw-bold mb-3 d-flex align-items-center gap-2 small"><Activity size={16} /> 전체 활동 내역</span>
+              <div className="h3 fw-bold text-dark mb-1">{stats.total.toLocaleString()}건</div>
+              <p className="text-muted x-small mt-2 mb-0">시스템 내 모든 활동 건수</p>
+            </div>
+          </div>
+
+          <div className="col-md-3">
+            <div className="tudio-card p-4 shadow-sm border-0 bg-white rounded-4 h-100">
+              <span className="text-success fw-bold mb-3 d-flex align-items-center gap-2 small"><PlusCircle size={16} /> 데이터 등록</span>
+              <div className="h3 fw-bold text-dark mb-1">{stats.insertCount}건</div>
+              <p className="text-muted x-small mt-2 mb-0">신규 생성(INSERT) 내역</p>
+            </div>
+          </div>
+
+          <div className="col-md-3">
+            <div className="tudio-card p-4 shadow-sm border-0 bg-white rounded-4 h-100">
+              <span className="text-warning fw-bold mb-3 d-flex align-items-center gap-2 small"><Edit size={16} /> 데이터 수정</span>
+              <div className="h3 fw-bold text-dark mb-1">{stats.updateCount}건</div>
+              <p className="text-muted x-small mt-2 mb-0">정보 변경(UPDATE) 내역</p>
+            </div>
+          </div>
+
+          <div className="col-md-3">
+            <div className="tudio-card p-4 shadow-sm border-0 bg-white rounded-4 h-100">
+              <span className="text-danger fw-bold mb-3 d-flex align-items-center gap-2 small"><Trash2 size={16} /> 데이터 삭제</span>
+              <div className="h3 fw-bold text-dark mb-1">{stats.deleteCount}건</div>
+              <p className="text-danger x-small mt-2 mb-0 fw-bold">DELETE (유실 주의)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* C. 탭 필터 (회의실 관리 Pill 스타일) */}
+      <div className="filter-tabs mb-4">
+        {['all', 'INSERT', 'UPDATE', 'DELETE'].map(tab => (
+          <button
+            key={tab}
+            className={`filter-btn ${activeTab === tab ? 'active' : ''}`}
+            onClick={() => setActiveTab(tab)}
+          >
+            {tab === 'all' ? '전체 로그' : tab === 'INSERT' ? '등록' : tab === 'UPDATE' ? '수정' : '삭제'}
+          </button>
+        ))}
+      </div>
+
+      {/* D. 목록 영역 (카운트 표시 및 버튼 분리형 검색바) */}
+      <div className="admin-common-box flex-grow-1 d-flex flex-column overflow-hidden shadow-sm bg-white rounded-4">
+        <div className="p-4 bg-white border-bottom">
+          <div className="d-flex justify-content-between align-items-center">
+            <h4 className="m-0" style={{fontSize: '1.15rem', fontWeight: '700'}}>
+              <i className="bi bi-list-ul me-2"></i>상세 목록 
+              <span className="text-primary ms-2" style={{fontSize: '0.95rem', fontWeight: '500'}}>
+                {finalKeyword ? `검색 결과 ${pageInfo?.totalRecord || 0}건` : `전체 ${pageInfo?.totalRecord || 0}건`}
+              </span>
+            </h4>
+            
+            <div className="d-flex gap-2 align-items-center">
+              {/* 기간 필터 */}
+              <div className="d-flex align-items-center gap-2 bg-light px-3 py-2 rounded-pill border x-small">
+                <Calendar size={14} className="text-muted" />
+                <input type="date" className="border-0 bg-transparent small" style={{outline:'none', fontSize:'0.85rem'}} value={filters.startDate} onChange={(e) => setFilters({...filters, startDate: e.target.value})} />
+                <span className="text-muted">~</span>
+                <input type="date" className="border-0 bg-transparent small" style={{outline:'none', fontSize:'0.85rem'}} value={filters.endDate} onChange={(e) => setFilters({...filters, endDate: e.target.value})} />
+              </div>
+
+              {/* 검색어 인풋 */}
+              <div className="position-relative" style={{ width: '250px' }}>
+                <Search className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" size={16} />
+                <input type="text" className="form-control ps-5 rounded-pill border-light bg-light" 
+                       style={{ height: '42px', fontSize: '0.9rem' }}
+                       placeholder="메뉴명, 내용 검색..." value={filters.keyword} 
+                       onChange={(e) => setFilters({...filters, keyword: e.target.value})} onKeyPress={handleKeyPress} />
+              </div>
+
+              {/* [수정] 인풋 태그 옆 밖에 꺼내놓은 검색 버튼 */}
+              <button className="tudio-btn tudio-btn-primary px-4 rounded-pill shadow-sm fw-bold" 
+                      onClick={handleSearch}>검색</button>
+            </div>
+          </div>
+        </div>
+
+        <div className="card-body p-0">
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0" style={{ tableLayout: 'fixed' }}>
+              <thead>
+                <tr>
+                  <th className="ps-4 text-center" style={{ width: '80px' }}>No</th>
+                  <th style={{ width: '180px' }}>발생 일시</th>
+                  <th style={{ width: '150px' }}>메뉴명</th>
+                  <th className="text-center" style={{ width: '120px' }}>유형</th>
+                  <th>상세 메시지</th>
+                  <th className="text-center" style={{ width: '100px' }}>관리자</th>
+                  <th style={{ width: '150px' }}>IP 주소</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr><td colSpan="7" className="text-center py-5">데이터 로드 중...</td></tr>
+                ) : logs.length === 0 ? (
+                  <tr><td colSpan="7" className="text-center py-5 text-muted">결과가 없습니다.</td></tr>
+                ) : (
+                  logs.map((log, index) => {
+                    const rowNo = (pageInfo?.totalRecord || 0) - ((currentPage - 1) * (pageInfo?.rowSize || 10)) - index;
+                    return (
+                      <tr key={log.actionLogId || index}>
+                        <td className="text-center small text-muted ps-4">{rowNo}</td>
+                        <td className="small">{new Date(log.regDate).toLocaleString()}</td>
+                        <td className="fw-bold text-primary-dark">{log.menuName}</td>
+                        <td className="text-center">{getActionBadge(log.actionType)}</td>
+                        <td className="small text-truncate" style={{maxWidth:'350px'}} title={log.actionMsg}>{log.actionMsg}</td>
+                        <td className="text-center fw-medium"><Hash size={14} className="me-1 text-muted" />{log.memberNo}</td>
+                        <td className="small text-muted">{log.ipAddr}</td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {pageInfo && (
+          <div className="p-4 border-top bg-white">
+            <Pagination pageInfo={pageInfo} onPageChange={(n) => setQuerySearchParams({page: n})} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default LogAction;

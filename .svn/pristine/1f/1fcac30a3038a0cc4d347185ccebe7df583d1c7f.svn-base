@@ -1,0 +1,138 @@
+/* Survey.css */
+.container {
+  background-color: #F0F4F8;
+  min-height: 100vh;
+  padding: 40px 20px;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+}
+
+.card {
+  max-width: 650px;
+  margin: 0 auto;
+  background: white;
+  padding: 40px;
+  border-radius: 16px;
+  border-top: 8px solid #2C5282;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #1A365D;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.subtitle {
+  font-size: 15px;
+  color: #4A5568;
+  margin-bottom: 40px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2C5282;
+  margin: 40px 0 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #E2E8F0;
+}
+
+.question-box {
+  margin-bottom: 35px;
+}
+
+.question-text {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 15px;
+  font-size: 16px;
+  color: #2D3748;
+  line-height: 1.5;
+}
+
+/* 라디오 & 체크박스 공통 스타일 */
+.option-label {
+  display: flex;
+  align-items: center;
+  padding: 14px 20px;
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  color: #4A5568;
+  transition: all 0.2s ease;
+  font-size: 15px;
+}
+
+.option-label:hover {
+  border-color: #3182CE;
+  background-color: #F7FAFC;
+}
+
+.option-label input {
+  margin-right: 12px;
+  width: 18px;
+  height: 18px;
+}
+
+/* 드롭다운 스타일 */
+.select-input {
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  border: 1.5px solid #E2E8F0;
+  font-size: 15px;
+  color: #2D3748;
+  background-color: #FFFFFF;
+  outline: none;
+}
+
+/* 5점 척도 가로 배치 스타일 */
+.scale-container {
+  display: flex;
+  justify-content: space-between;
+  background: #F8FAFC;
+  padding: 20px 10px;
+  border-radius: 12px;
+  border: 1.5px solid #EDF2F7;
+  gap: 5px;
+}
+
+.scale-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  cursor: pointer;
+  text-align: center;
+}
+
+.scale-option span {
+  font-size: 12px;
+  margin-top: 8px;
+  color: #718096;
+}
+
+.submit-button {
+  width: 100%;
+  padding: 18px;
+  background-color: #3182CE;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 30px;
+  box-shadow: 0 4px 12px rgba(49, 130, 206, 0.2);
+  transition: background 0.2s;
+}
+
+.submit-button:hover {
+  background-color: #2B6CB0;
+}

@@ -1,0 +1,23 @@
+@charset "UTF-8";
+
+.footer {
+    background-color: #343a40; 
+    padding: 15px 20px;
+    width: auto;         
+    box-sizing: border-box;
+    border-top: 1px solid #495057; 
+    color: #ced4da; 
+    font-size: 0.8rem;
+    
+    transition: margin-left 0.3s ease;
+    margin-top: auto;
+}
+
+/* 나머지 스타일 유지 */
+.footer a { color: #ced4da; text-decoration: none; transition: color 0.2s ease; }
+.footer a:hover { color: #ffffff; text-decoration: underline; }
+.footer h5, .footer h6 { color: #ffffff; font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; }
+.footer .list-unstyled { margin-bottom: 0; }
+.footer .list-unstyled li { margin-bottom: 2px; }
+.footer address { margin-bottom: 0; line-height: 1.6; color: #adb5bd; font-style: normal; }
+.footer .separator { margin: 0 6px; color: #6c757d; }

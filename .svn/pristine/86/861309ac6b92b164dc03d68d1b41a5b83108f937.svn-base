@@ -1,0 +1,217 @@
+import React, { useState } from 'react';
+import { 
+  ShieldCheck, Search, Calendar, ChevronRight, Download,
+  Monitor, Smartphone, Globe, AlertCircle, CheckCircle2, FileSpreadsheet
+} from 'lucide-react';
+
+// 1. 샘플 데이터 (JSP의 items="${logList}" 대응)
+const MOCK_LOGS = [
+  { id: 1, time: '2025-12-19 14:32:01', user: '김관리 (admin)', ip: '192.168.0.5', os: 'Windows 10', browser: 'Chrome', status: 'success', reason: '' },
+  { id: 2, time: '2025-12-19 14:10:15', user: '이영희 (young)', ip: '211.55.23.11', os: 'Mac OS', browser: 'Safari', status: 'success', reason: '' },
+  { id: 3, time: '2025-12-19 13:55:00', user: '박지민 (park)', ip: '118.33.10.55', os: 'Windows 11', browser: 'Edge', status: 'fail', reason: '비밀번호 오류' },
+  { id: 4, time: '2025-12-19 09:00:22', user: '홍길동 (hong)', ip: '172.16.10.1', os: 'Android', browser: 'Mobile App', status: 'success', reason: '' },
+  { id: 5, time: '2025-12-18 18:20:11', user: '최준영 (choi)', ip: '58.123.45.67', os: 'iOS', browser: 'Mobile Safari', status: 'fail', reason: '계정 잠금' },
+];
+
+const LogLogin = () => {
+  const [logs, setLogs] = useState(MOCK_LOGS);
+  
+  // 오늘 날짜 구하기 (검색 필터 초기값용)
+  const today = new Date().toISOString().split('T')[0];
+  const [searchParams, setSearchParams] = useState({
+    startDate: today,
+    endDate: today,
+    condition: 'id',
+    keyword: '',
+    status: 'all'
+  });
+
+  // 검색 핸들러
+  const handleSearch = () => {
+    alert('검색 기능은 서버 API와 연동이 필요합니다.\n(현재는 데모 데이터만 표시됩니다.)');
+  };
+
+  // 엑셀 다운로드 핸들러
+  const handleDownload = () => {
+    if(window.confirm(`현재 검색된 ${logs.length}건의 로그를 엑셀로 다운로드 하시겠습니까?`)) {
+        alert('엑셀 다운로드가 시작되었습니다.');
+    }
+  };
+
+  // OS 아이콘 헬퍼
+  const getOsIcon = (os) => {
+    if (os.toLowerCase().includes('windows') || os.toLowerCase().includes('mac')) return <Monitor size={14}/>;
+    if (os.toLowerCase().includes('android') || os.toLowerCase().includes('ios')) return <Smartphone size={14}/>;
+    return <Globe size={14}/>;
+  };
+
+  return (
+    <div className="flex-grow-1 p-5 d-flex flex-column h-100">
+      
+      {/* 1. Breadcrumb & Header */}
+      <div className="mb-4">
+        <nav className="text-muted small mb-2 d-flex align-items-center gap-2">
+          <span>Admin</span> <ChevronRight size={12} /> 
+          <span>로그 관리</span> <ChevronRight size={12} />
+          <span className="text-primary fw-bold">로그인 로그</span>
+        </nav>
+        <h2 className="fw-bold text-dark m-0 d-flex align-items-center gap-2">
+          <ShieldCheck size={24} className="text-primary" /> 로그인 이력 조회
+        </h2>
+      </div>
+
+      {/* 2. 검색 필터 영역 (상단 카드) */}
+      <div className="card border-0 shadow-sm rounded-3 mb-4 bg-white">
+        <div className="card-body bg-light rounded-3 p-4">
+            <div className="row g-3 align-items-end">
+                <div className="col-md-4">
+                    <label className="form-label fw-bold small text-muted">조회 기간</label>
+                    <div className="input-group">
+                        <input 
+                            type="date" 
+                            className="form-control" 
+                            value={searchParams.startDate}
+                            onChange={(e) => setSearchParams({...searchParams, startDate: e.target.value})}
+                        />
+                        <span className="input-group-text bg-white border-start-0 border-end-0">~</span>
+                        <input 
+                            type="date" 
+                            className="form-control"
+                            value={searchParams.endDate}
+                            onChange={(e) => setSearchParams({...searchParams, endDate: e.target.value})}
+                        />
+                    </div>
+                </div>
+                
+                <div className="col-md-2">
+                    <label className="form-label fw-bold small text-muted">검색 조건</label>
+                    <select className="form-select" onChange={(e) => setSearchParams({...searchParams, condition: e.target.value})}>
+                        <option value="id">아이디</option>
+                        <option value="name">이름</option>
+                        <option value="ip">접속 IP</option>
+                    </select>
+                </div>
+                <div className="col-md-3">
+                    <label className="form-label fw-bold small text-muted">검색어</label>
+                    <input 
+                        type="text" 
+                        className="form-control" 
+                        placeholder="검색어를 입력하세요"
+                        value={searchParams.keyword}
+                        onChange={(e) => setSearchParams({...searchParams, keyword: e.target.value})}
+                    />
+                </div>
+
+                <div className="col-md-2">
+                    <label className="form-label fw-bold small text-muted">로그인 상태</label>
+                    <select className="form-select" onChange={(e) => setSearchParams({...searchParams, status: e.target.value})}>
+                        <option value="all">전체</option>
+                        <option value="success">성공</option>
+                        <option value="fail">실패</option>
+                    </select>
+                </div>
+
+                <div className="col-md-1">
+                    <button type="button" className="btn btn-primary w-100" onClick={handleSearch}>
+                        <Search size={18} />
+                    </button>
+                </div>
+            </div>
+        </div>
+      </div>
+
+      {/* 3. 리스트 영역 (하단 카드) */}
+      <div className="flex-grow-1 card border-0 shadow-sm rounded-3 overflow-hidden d-flex flex-column bg-white">
+        
+        {/* 카드 헤더 */}
+        <div className="p-3 border-bottom d-flex justify-content-between align-items-center bg-white">
+           <div>
+             <h5 className="fw-bold mb-1">📋 로그인 이력 목록</h5>
+             <small className="text-muted">
+                총 <span className="text-primary fw-bold">{logs.length}</span>건의 로그가 검색되었습니다. 
+                (로그 보관 기간: <span className="text-danger fw-bold">6개월</span>)
+             </small>
+           </div>
+           <button className="btn btn-success btn-sm d-flex align-items-center gap-2 fw-bold px-3" onClick={handleDownload}>
+             <FileSpreadsheet size={16}/> 엑셀 다운로드
+           </button>
+        </div>
+
+        {/* 테이블 */}
+        <div className="table-responsive flex-grow-1">
+          <table className="table table-hover align-middle mb-0">
+            <thead className="bg-light text-muted small text-uppercase">
+              <tr>
+                <th className="text-center py-3" style={{width:'60px'}}>No</th>
+                <th className="ps-3 py-3">접속 일시</th>
+                <th className="py-3">사용자 (ID)</th>
+                <th className="py-3">접속 IP</th>
+                <th className="py-3">OS / 브라우저</th>
+                <th className="text-center py-3">상태</th>
+                <th className="py-3">비고 (실패 사유)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {logs.map((log) => (
+                <tr key={log.id}>
+                  <td className="text-center text-muted small">{log.id}</td>
+                  <td className="ps-3 text-muted small number-font">{log.time}</td>
+                  <td className="fw-bold text-dark">{log.user}</td>
+                  <td className="text-secondary small number-font">{log.ip}</td>
+                  <td>
+                    <div className="d-flex align-items-center gap-2 small text-muted">
+                       {getOsIcon(log.os)}
+                       {log.os} / {log.browser}
+                    </div>
+                  </td>
+                  <td className="text-center">
+                    {log.status === 'success' ? (
+                      <span className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3">
+                        <CheckCircle2 size={12} className="me-1"/> 성공
+                      </span>
+                    ) : (
+                      <span className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-3">
+                        <AlertCircle size={12} className="me-1"/> 실패
+                      </span>
+                    )}
+                  </td>
+                  <td className="text-muted small">
+                    {log.status !== 'success' ? <span className="text-danger">{log.reason}</span> : '-'}
+                  </td>
+                </tr>
+              ))}
+              {logs.length === 0 && (
+                <tr>
+                    <td colSpan="7" className="text-center py-5 text-muted">
+                        <div className="d-flex flex-column align-items-center">
+                            <AlertCircle size={40} className="text-muted mb-2 opacity-50"/>
+                            <span>검색된 로그 데이터가 없습니다.</span>
+                        </div>
+                    </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* 페이지네이션 */}
+        <div className="p-3 border-top bg-white d-flex justify-content-center">
+           <nav>
+             <ul className="pagination pagination-sm mb-0">
+               <li className="page-item disabled"><a className="page-link" href="#">이전</a></li>
+               <li className="page-item active"><a className="page-link" href="#">1</a></li>
+               <li className="page-item"><a className="page-link" href="#">2</a></li>
+               <li className="page-item"><a className="page-link" href="#">3</a></li>
+               <li className="page-item"><a className="page-link" href="#">4</a></li>
+               <li className="page-item"><a className="page-link" href="#">5</a></li>
+               <li className="page-item"><a className="page-link" href="#">다음</a></li>
+             </ul>
+           </nav>
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
+export default LogLogin;

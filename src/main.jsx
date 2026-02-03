@@ -1,0 +1,33 @@
+import React from 'react';
+import { createRoot } from 'react-dom/client'
+// import Survey from './survey/Survey.jsx'
+
+// 폰트 연결
+import '@/assets/fonts/pretendard/pretendard.css';
+
+// 부트스트랩 스타일 (화면 디자인)
+import 'bootstrap/dist/css/bootstrap.min.css';
+
+// 부트스트랩 기능 (드롭다운, 모달, 사이드바 토글 등)
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+
+// 공통 색상 변수 (파란색, 회색 등)
+import './assets/css/common/variables.css';
+
+// 공통 디자인
+import './assets/css/common/common.css';
+
+/* createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <Survey />
+  </StrictMode>,
+) */
+
+import App from './App.jsx'
+import { BrowserRouter } from 'react-router-dom';
+
+createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+      <App />
+  </React.StrictMode>
+)

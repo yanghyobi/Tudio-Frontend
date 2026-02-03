@@ -1,0 +1,165 @@
+import React, { useState } from "react";
+import "./Survey.css";
+
+const Survey = () => {
+  const [formData, setFormData] = useState({
+    role: "team_member",
+    projectCount: "1",
+    usageTime: "1h",
+    toolExperience: "none",
+    satisfaction: "",
+    frequentFeatures: [],
+    // q7~q20 초기화
+    ...Object.fromEntries(Array.from({ length: 14 }, (_, i) => [`q${i + 7}`, ""]))
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleCheckbox = (e) => {
+    const { name, value, checked } = e.target;
+    const current = formData[name] || [];
+    if (checked) {
+      setFormData((prev) => ({ ...prev, [name]: [...current, value] }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: current.filter((v) => v !== value) }));
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      // 1. 서버의 API 주소로 데이터를 보냅니다.
+      const response = await fetch("/tudio/survey/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json", // JSON 형태로 보낸다고 알려줌
+        },
+        body: JSON.stringify(formData), // 우리가 만든 데이터를 글자(JSON)로 바꿔서 보냄
+      });
+
+      if (response.ok) {
+        alert("DB에 성공적으로 저장되었습니다!");
+      } else {
+        alert("서버 오류가 발생했습니다.");
+      }
+    } catch (error) {
+      console.error("통신 에러:", error);
+      alert("서버와 연결할 수 없습니다.");
+    }
+    //alert("설문이 성공적으로 제출되었습니다. 감사합니다!");
+  };
+
+  const featureOptions = ["프로젝트 캘린더", "To Do List", "칸반보드", "간트차트", "채팅", "화상채팅", "프로젝트 자료실", "드라이브"];
+
+  const specializedQuestions = [
+    { key: "q7", text: "7. 초기 프로젝트 셋업 및 환경 설정 과정이 직관적이었습니까?" },
+    { key: "q8", text: "8. 구성원 초대 및 권한 부여 과정이 지연 없이 매끄럽게 진행되었습니까?" },
+    { key: "q9", text: "9. 상/하위 업무 체계가 실무 워크플로우를 반영하기에 적합한 구조입니까?" },
+    { key: "q10", text: "10. 업무(Task) 생성 및 상태 업데이트 과정의 조작 편의성은 어떠합니까?" },
+    { key: "q11", text: "11. To-do List 기능이 업무 우선순위 파악 및 누락 방지에 기여합니까?" },
+    { key: "q12", text: "12. 칸반보드 인터페이스가 프로젝트 현황을 시악적으로 충분히 제공합니까?" },
+    { key: "q13", text: "13. 간트차트가 일정 계획 및 리소스 배분을 관리하는 데 효과적입니까?" },
+    { key: "q14", text: "14. 공유 캘린더 기능이 팀 전체의 가용 일정을 파악하는 데 도움이 됩니까?" },
+    { key: "q15", text: "15. 개인 일정 관리 기능과 프로젝트 일정 간의 연동성이 만족스럽습니까?" },
+    { key: "q16", text: "16. 공유 드라이브를 통한 문서 자산화 및 파일 공유 프로세스가 효율적입니까?" },
+    { key: "q17", text: "17. 게시판 기능이 팀 내 지식 공유 및 소통 창구로서 적절합니까?" },
+    { key: "q18", text: "18. 회의록 기능을 통해 결정 사항을 아카이빙하고 추적하는 것이 용이합니까?" },
+    { key: "q19", text: "19. 실시간 채팅 및 화상 회의 기능이 커뮤니케이션 비용 절감에 도움이 됩니까?" },
+    { key: "q20", text: "20. 알림 시스템이 업무 몰입을 방해하지 않으면서도 정보를 적시에 전달합니까?" },
+  ];
+
+  return (
+    <div className="container">
+      <div className="card">
+        <h1 className="title">Tudio 서비스 이용 경험 설문</h1>
+        <p className="subtitle">사용자님의 소중한 의견은 Tudio의 더 나은 협업 환경을 만드는 데 밑거름이 됩니다.</p>
+
+        <form onSubmit={handleSubmit}>
+          <h3 className="section-title">Step 1. 기본 이용 현황</h3>
+          
+          <div className="question-box">
+            <label className="question-text">1. 서비스 내 주요 역할</label>
+            <select name="role" value={formData.role} onChange={handleChange} className="select-input">
+              <option value="pm">프로젝트 관리자 (PM)</option>
+              <option value="team_member">프로젝트 팀원</option>
+              <option value="company_admin">기업 관리자</option>
+              <option value="etc">기타</option>
+            </select>
+          </div>
+
+          <div className="question-box">
+            <label className="question-text">2. 연평균 동시 진행 프로젝트 수</label>
+            {[["1", "1개"], ["2_3", "2~3개"], ["4_5", "4~5개"], ["6_plus", "6개 이상"]].map(([v, t]) => (
+              <label key={v} className="option-label">
+                <input type="radio" name="projectCount" value={v} checked={formData.projectCount === v} onChange={handleChange} />
+                {t}
+              </label>
+            ))}
+          </div>
+
+          <div className="question-box">
+            <label className="question-text">3. 일 평균 서비스 가동 시간</label>
+            <select name="usageTime" value={formData.usageTime} onChange={handleChange} className="select-input">
+              <option value="1h">1시간 미만</option>
+              <option value="3h">1~3시간</option>
+              <option value="6h">4~6시간</option>
+              <option value="over_8h">8시간 이상(상시 가동)</option>
+            </select>
+          </div>
+
+          <div className="question-box">
+            <label className="question-text">4. 타 협업 도구 사용 경험</label>
+            {[{v:"none", t:"신규 사용자"}, {v:"yes", t:"유경험자 (Jira, Notion, Slack 등)"}].map(opt => (
+              <label key={opt.v} className="option-label">
+                <input type="radio" name="toolExperience" value={opt.v} checked={formData.toolExperience === opt.v} onChange={handleChange} />
+                {opt.t}
+              </label>
+            ))}
+          </div>
+
+          <div className="question-box">
+            <label className="question-text">5. 서비스 전반적 만족도</label>
+            {["매우 만족", "만족", "보통", "불만족"].map(opt => (
+              <label key={opt} className="option-label">
+                <input type="radio" name="satisfaction" value={opt} checked={formData.satisfaction === opt} onChange={handleChange} />
+                {opt}
+              </label>
+            ))}
+          </div>
+
+          <div className="question-box">
+            <label className="question-text">6. 핵심 활용 기능 (중복 선택)</label>
+            {featureOptions.map(opt => (
+              <label key={opt} className="option-label">
+                <input type="checkbox" name="frequentFeatures" value={opt} checked={formData.frequentFeatures.includes(opt)} onChange={handleCheckbox} />
+                {opt}
+              </label>
+            ))}
+          </div>
+
+          <h3 className="section-title">Step 2. 상세 역량 평가</h3>
+          {specializedQuestions.map((q) => (
+            <div className="question-box" key={q.key}>
+              <label className="question-text">{q.text}</label>
+              <div className="scale-container">
+                {["1", "2", "3", "4", "5"].map((v) => (
+                  <label key={v} className="scale-option">
+                    <input type="radio" name={q.key} value={v} checked={formData[q.key] === v} onChange={handleChange} />
+                    <span>{v}점</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          <button type="submit" className="submit-button">설문 제출 및 데이터 분석</button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default Survey;

@@ -1,0 +1,252 @@
+import React, { useState } from 'react';
+import { 
+  MessageCircle, List, ChevronRight, 
+  Search, User, Calendar, Send, Trash2, 
+  CheckSquare, AlertCircle
+} from 'lucide-react';
+
+// 1. 샘플 데이터 (HTML에 있던 내용 그대로 적용)
+const MOCK_INQUIRIES = [
+  { 
+    id: 1, 
+    type: '오류', 
+    title: '로그인이 안됩니다', 
+    writer: '김철수', 
+    date: '2025-12-19', 
+    status: 'waiting', 
+    content: '로그인 버튼을 눌러도 반응이 없습니다. 크롬 브라우저 사용중입니다.', 
+    answer: '' 
+  },
+  { 
+    id: 2, 
+    type: '기타', 
+    title: '기능 제안합니다', 
+    writer: '이영희', 
+    date: '2025-12-18', 
+    status: 'completed', 
+    content: '안녕하세요, Tudio 사용 중 건의사항이 있어 남깁니다.\n대시보드 화면에서 다크모드뿐만 아니라 다양한 컬러 테마를 선택할 수 있으면 좋겠습니다.', 
+    answer: '안녕하세요, 이영희님.\nTudio 관리자입니다.\n\n남겨주신 소중한 의견 진심으로 감사드립니다.\n테마 커스터마이징 기능은 현재 개발팀에서 긍정적으로 검토 중인 사항이며, 내년 상반기 업데이트에 반영될 수 있도록 노력하겠습니다.' 
+  }
+];
+
+const BoardInquiry = () => {
+  // === State ===
+  const [view, setView] = useState('list'); // 'list' | 'detail'
+  const [posts, setPosts] = useState(MOCK_INQUIRIES);
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [answerText, setAnswerText] = useState('');
+  const [sendEmail, setSendEmail] = useState(false); // 이메일 발송 체크 여부
+
+  // === Handlers ===
+  
+  // 상세 화면으로 이동
+  const goDetail = (post) => {
+    setSelectedPost(post);
+    setAnswerText(post.answer || '');
+    setSendEmail(false); // 초기화
+    setView('detail');
+  };
+
+  // 목록으로 돌아가기
+  const goList = () => {
+    setView('list');
+    setSelectedPost(null);
+    setAnswerText('');
+  };
+
+  // 답변 등록/수정
+  const handleSaveAnswer = () => {
+    if (!answerText.trim()) return alert('답변 내용을 입력해주세요.');
+
+    if (window.confirm(sendEmail ? '답변을 등록하고 이메일을 발송하시겠습니까?' : '답변을 등록하시겠습니까?')) {
+      const updatedPosts = posts.map(p => 
+        p.id === selectedPost.id 
+          ? { ...p, answer: answerText, status: 'completed' } 
+          : p
+      );
+      setPosts(updatedPosts);
+      setSelectedPost({ ...selectedPost, answer: answerText, status: 'completed' });
+      
+      alert(sendEmail ? '답변 등록 및 이메일 발송이 완료되었습니다.' : '답변이 등록되었습니다.');
+    }
+  };
+
+  // 삭제
+  const handleDelete = () => {
+    if (window.confirm('정말 삭제하시겠습니까?')) {
+      setPosts(posts.filter(p => p.id !== selectedPost.id));
+      alert('삭제되었습니다.');
+      goList();
+    }
+  };
+
+  return (
+    <div className="flex-grow-1 p-5 d-flex flex-column h-100">
+      
+      {/* 1. Breadcrumb & Header */}
+      <div className="mb-4">
+        <nav className="text-muted small mb-2 d-flex align-items-center gap-2">
+          <span>Admin</span> <ChevronRight size={12} /> 
+          <span>게시판 관리</span> <ChevronRight size={12} />
+          <span className="text-primary fw-bold">1:1 문의</span>
+        </nav>
+        <h2 className="fw-bold text-dark m-0 d-flex align-items-center gap-2">
+          <MessageCircle size={24} className="text-primary" /> 
+          {view === 'list' ? '1:1 문의 관리' : '문의 내용 상세'}
+        </h2>
+      </div>
+
+      {/* 2. Content Area (회색 배경 위 흰색 카드 스타일) */}
+      
+      {/* ==================== LIST VIEW ==================== */}
+      {view === 'list' && (
+        <div className="flex-grow-1 bg-white rounded-3 shadow-sm border overflow-hidden d-flex flex-column">
+          <div className="p-3 border-bottom d-flex justify-content-between align-items-center bg-white">
+             <h5 className="fw-bold mb-0 text-dark">💬 문의 목록</h5>
+             <div className="d-flex gap-2">
+                {/* 검색 필터 예시 */}
+                <select className="form-select form-select-sm" style={{width:'120px'}}>
+                    <option>전체</option>
+                    <option>답변대기</option>
+                    <option>답변완료</option>
+                </select>
+             </div>
+          </div>
+          
+          <div className="table-responsive flex-grow-1">
+            <table className="table table-hover align-middle mb-0">
+              <thead className="bg-light text-muted small text-uppercase">
+                <tr>
+                  <th className="text-center py-3" style={{width:'80px'}}>유형</th>
+                  <th className="ps-3 py-3">제목</th>
+                  <th className="text-center" style={{width:'120px'}}>작성자</th>
+                  <th className="text-center" style={{width:'100px'}}>상태</th>
+                  <th className="text-center" style={{width:'120px'}}>관리</th>
+                </tr>
+              </thead>
+              <tbody>
+                {posts.map(post => (
+                  <tr key={post.id} style={{cursor:'pointer'}} onClick={() => goDetail(post)}>
+                    <td className="text-center text-muted small">{post.type}</td>
+                    <td className="ps-3">
+                      <span className="fw-bold text-dark">{post.title}</span>
+                    </td>
+                    <td className="text-center text-muted small">{post.writer}</td>
+                    <td className="text-center">
+                      {post.status === 'waiting' ? (
+                        <span className="badge bg-warning text-dark border border-warning">대기</span>
+                      ) : (
+                        <span className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">완료</span>
+                      )}
+                    </td>
+                    <td className="text-center">
+                      <button 
+                        className={`btn btn-sm px-3 fw-bold ${post.status === 'waiting' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                        onClick={(e) => {
+                            e.stopPropagation(); // 행 클릭 방지
+                            goDetail(post);
+                        }}
+                      >
+                        {post.status === 'waiting' ? '답변하기' : '상세보기'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {posts.length === 0 && (
+                    <tr><td colSpan="5" className="text-center py-5 text-muted">문의 내역이 없습니다.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ==================== DETAIL VIEW ==================== */}
+      {view === 'detail' && selectedPost && (
+        <div className="d-flex flex-column gap-4 h-100">
+            
+            {/* 상단: 질문 내용 카드 */}
+            <div className="card border-0 shadow-sm rounded-3 overflow-hidden">
+                <div className="card-header bg-light py-3 px-4 d-flex justify-content-between align-items-center">
+                    <div className="d-flex align-items-center gap-2">
+                        <span className="badge bg-secondary">{selectedPost.type}</span>
+                        <h5 className="fw-bold mb-0 m-0">{selectedPost.title}</h5>
+                    </div>
+                    {selectedPost.status === 'waiting' ? (
+                        <span className="badge bg-warning text-dark fs-6">답변 대기</span>
+                    ) : (
+                        <span className="badge bg-success fs-6">답변 완료</span>
+                    )}
+                </div>
+                <div className="card-body p-4">
+                    {/* 작성자 정보 */}
+                    <div className="d-flex justify-content-between border-bottom pb-3 mb-3 text-muted small">
+                        <div className="d-flex gap-3">
+                            <span className="d-flex align-items-center gap-1"><User size={14}/> {selectedPost.writer}</span>
+                            <span className="vr"></span>
+                            <span className="d-flex align-items-center gap-1"><Calendar size={14}/> {selectedPost.date}</span>
+                        </div>
+                    </div>
+                    {/* 본문 내용 */}
+                    <div className="bg-light p-4 rounded border" style={{minHeight: '150px', whiteSpace: 'pre-line', lineHeight: '1.6'}}>
+                        {selectedPost.content}
+                    </div>
+                </div>
+            </div>
+
+            {/* 하단: 관리자 답변 영역 (HTML의 #section-board-inquiry-detail 하단 부분) */}
+            <div className="card border-primary border-2 shadow-sm rounded-3 flex-grow-1">
+                <div className="card-header bg-primary bg-opacity-10 py-3 px-4">
+                    <h5 className="fw-bold mb-0 text-primary d-flex align-items-center gap-2">
+                        <MessageCircle size={20}/> 관리자 답변
+                    </h5>
+                </div>
+                <div className="card-body p-4 d-flex flex-column">
+                    <label className="form-label fw-bold text-muted small">답변 내용 작성</label>
+                    <textarea 
+                        className="form-control mb-3 flex-grow-1" 
+                        rows="5" 
+                        placeholder="문의에 대한 답변을 입력해주세요."
+                        value={answerText}
+                        onChange={(e) => setAnswerText(e.target.value)}
+                        style={{resize:'none'}}
+                    ></textarea>
+
+                    <div className="d-flex justify-content-between align-items-center mt-auto pt-2">
+                        <button className="btn btn-secondary px-4 d-flex align-items-center gap-2" onClick={goList}>
+                            <List size={16}/> 목록으로
+                        </button>
+
+                        <div className="d-flex align-items-center gap-2">
+                            {/* 답변 대기 상태일 때만 '이메일 발송' 옵션 표시 */}
+                            <div className="form-check d-flex align-items-center me-3">
+                                <input 
+                                    className="form-check-input me-2" 
+                                    type="checkbox" 
+                                    id="checkEmail" 
+                                    checked={sendEmail}
+                                    onChange={(e) => setSendEmail(e.target.checked)}
+                                />
+                                <label className="form-check-label small fw-bold" htmlFor="checkEmail">답변 등록 시 이메일 발송</label>
+                            </div>
+
+                            <button className="btn btn-outline-danger px-3 me-2" onClick={handleDelete}>
+                                <Trash2 size={16}/> 삭제
+                            </button>
+
+                            <button className="btn btn-primary px-4 fw-bold d-flex align-items-center gap-2" onClick={handleSaveAnswer}>
+                                <Send size={16}/> {selectedPost.status === 'waiting' ? '답변 등록' : '답변 수정'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+      )}
+
+    </div>
+  );
+};
+
+export default BoardInquiry;

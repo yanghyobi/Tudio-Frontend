@@ -1,0 +1,54 @@
+/* 페이징 영역 전체 틀 */
+.pagination-area {
+    display: flex;
+    justify-content: center; /* 중앙 정렬 */
+    align-items: center;
+    gap: 6px; /* 버튼 사이 간격 */
+    margin-top: 20px;
+}
+
+/* 기본 버튼 디자인 */
+.pg-btn {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    border: 1px solid #dee2e6; /* 연한 회색 테두리 */
+    background-color: #fff;
+    color: #495057;
+    font-size: 14px;
+    border-radius: 4px; /* 둥근 모서리 */
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 마우스 올렸을 때 */
+.pg-btn:hover {
+    background-color: #e9ecef;
+    color: #212529;
+    border-color: #dee2e6;
+}
+
+/* 현재 선택된 페이지 (파란색 강조) */
+.pg-btn.active {
+    background-color: #0d6efd; /* 부트스트랩 기본 파란색 */
+    color: white;
+    border-color: #0d6efd;
+    font-weight: bold;
+    cursor: default; /* 클릭 안 되는 느낌 */
+    pointer-events: none;
+}
+
+/* 이전/다음 버튼 텍스트 스타일 */
+.pg-btn.prev, .pg-btn.next {
+    font-weight: 500;
+    color: #0d6efd;
+    padding: 0 12px; /* 텍스트가 기니까 좀 더 넓게 */
+}
+
+.pg-btn.prev:hover, .pg-btn.next:hover {
+    background-color: #0d6efd;
+    color: white;
+}

@@ -1,0 +1,236 @@
+import axios from 'axios';
+import {
+  Activity,
+  AlertCircle, // ArrowRepeat 대신 RotateCw 사용
+  CheckCircle2,
+  ChevronRight,
+  Clock,
+  FileSpreadsheet,
+  Info,
+  RotateCw,
+  Search,
+  Zap
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import Pagination from '../../../components/common/Pagination';
+
+const LogBatch = () => {
+  const [querySearchParams, setQuerySearchParams] = useSearchParams();
+  const currentPage = parseInt(querySearchParams.get('page')) || 1;
+  const [logs, setLogs] = useState([]);
+  const [pageInfo, setPageInfo] = useState(null);
+
+  // 필터 상태 (오늘 날짜 기준)
+  const today = new Date().toISOString().split('T')[0];
+  const [filters, setFilters] = useState({ 
+    startDate: today, 
+    endDate: today, 
+    keyword: '', 
+    status: 'all' 
+  });
+
+  const stats = {
+    total: pageInfo?.totalRecord || 0,
+    success: logs.filter(l => l.batchStatus === 'SUCCESS').length,
+    fail: logs.filter(l => l.batchStatus === 'FAIL').length,
+    // 평균 소요 시간 계산
+    avgDuration: logs.length > 0 
+      ? Math.round(logs.reduce((acc, curr) => acc + (curr.duration || 0), 0) / logs.length) 
+      : 0
+  };
+
+  useEffect(() => { fetchLogs(); }, [currentPage]);
+
+  const fetchLogs = async () => {
+    try {
+      const params = { 
+        page: currentPage, 
+        searchWord: filters.keyword, 
+        startDate: filters.startDate,
+        endDate: filters.endDate,
+        status: filters.status
+      };
+      const response = await axios.get('/api/log/batch/list', { params });
+      
+      // 서버에서 PaginationInfoVO 객체를 그대로 리턴하므로 구조에 맞춰 세팅
+      setLogs(response.data.dataList || []);
+      setPageInfo(response.data); 
+    } catch (error) {
+      console.error("배치 로그 조회 실패:", error);
+    }
+  };
+
+  // 소요 시간 포맷팅 (초 -> 분/초)
+  const formatDuration = (seconds) => {
+    if (!seconds || seconds < 0) return "0초";
+    if (seconds < 60) return `${seconds}초`;
+    const min = Math.floor(seconds / 60);
+    const sec = seconds % 60;
+    return `${min}분 ${sec}초`;
+  };
+
+  return (
+    <div className="flex-grow-1 p-5 d-flex flex-column h-100">
+      {/* 헤더 영역 */}
+      <div className="mb-4">
+        <nav className="text-muted small mb-2 d-flex align-items-center gap-2">
+          <span>Admin</span> <ChevronRight size={12} /> <span>로그 관리</span> <ChevronRight size={12} /> <span className="text-primary fw-bold">배치 로그</span>
+        </nav>
+        <h2 className="fw-bold text-dark m-0 d-flex align-items-center gap-2">
+          <RotateCw size={24} className="text-primary" /> 배치 로그 조회
+        </h2>
+      </div>
+
+      <div className="summary-container mb-4">
+        {/* 전체 실행 건수 */}
+        <div className="summary-card">
+          <span className="summary-label text-primary-custom">
+            <Activity size={16} /> 전체 실행 횟수
+          </span>
+          <div className="d-flex align-items-baseline">
+            <div className="summary-value me-2">{stats.total.toLocaleString()}</div>
+            <span className="text-muted small">건</span>
+          </div>
+          <span className="small text-muted mt-1">스케줄러에 의한 총 실행수</span>
+        </div>
+
+        {/* 실행 성공 (Success) */}
+        <div className="summary-card">
+          <span className="summary-label text-success">
+            <CheckCircle2 size={16} /> 실행 성공
+          </span>
+          <div className="d-flex align-items-baseline">
+            <div className="summary-value text-success me-2">{stats.success}</div>
+            <span className="text-muted small">건</span>
+          </div>
+          <span className="small text-muted mt-1">정상 종료된 배치 작업</span>
+        </div>
+
+        {/* 실행 실패 (Fail) */}
+        <div className="summary-card">
+          <span className="summary-label text-danger-custom">
+            <AlertCircle size={16} /> 실행 실패
+          </span>
+          <div className="d-flex align-items-baseline">
+            <div className="summary-value text-danger-custom me-2">{stats.fail}</div>
+            <span className="text-muted small">건</span>
+          </div>
+          <span className="small text-danger-custom mt-1 fw-bold">에러 로그 확인 필요</span>
+        </div>
+
+        {/* 평균 소요 시간 (Performance) */}
+        <div className="summary-card">
+          <span className="summary-label text-warning-custom">
+            <Zap size={16} /> 평균 소요 시간
+          </span>
+          <div className="d-flex align-items-baseline">
+            <div className="summary-value text-warning-custom me-2">
+              {formatDuration(stats.avgDuration)}
+            </div>
+          </div>
+          <span className="small text-muted mt-1">작업당 평균 퍼포먼스</span>
+        </div>
+      </div>
+
+      {/* 검색 필터 */}
+      <div className="card border-0 shadow-sm rounded-3 mb-4 bg-light p-4">
+        <div className="row g-3 align-items-end">
+          <div className="col-md-3">
+            <label className="form-label fw-bold small text-muted">조회 기간</label>
+            <div className="input-group">
+              <input type="date" className="form-control" value={filters.startDate} onChange={(e) => setFilters({...filters, startDate: e.target.value})} />
+              <input type="date" className="form-control" value={filters.endDate} onChange={(e) => setFilters({...filters, endDate: e.target.value})} />
+            </div>
+          </div>
+          <div className="col-md-2">
+            <label className="form-label fw-bold small text-muted">상태</label>
+            <select className="form-select" value={filters.status} onChange={(e) => setFilters({...filters, status: e.target.value})}>
+              <option value="all">전체</option>
+              <option value="SUCCESS">성공</option>
+              <option value="FAIL">실패</option>
+            </select>
+          </div>
+          <div className="col-md-5">
+            <label className="form-label fw-bold small text-muted">검색어 (작업명/메시지)</label>
+            <input type="text" className="form-control" placeholder="검색어를 입력하세요" value={filters.keyword} onChange={(e) => setFilters({...filters, keyword: e.target.value})} onKeyDown={(e) => e.key === 'Enter' && fetchLogs()} />
+          </div>
+          <div className="col-md-2">
+            <button className="btn btn-primary w-100" onClick={fetchLogs}><Search size={18} /></button>
+          </div>
+        </div>
+      </div>
+
+      {/* 목록 테이블 */}
+      <div className="card border-0 shadow-sm rounded-3 overflow-hidden d-flex flex-column bg-white">
+        <div className="p-3 border-bottom d-flex justify-content-between align-items-center">
+          <div><h5 className="fw-bold mb-1">📋 배치 실행 목록</h5><small className="text-muted">총 <span className="text-primary fw-bold">{pageInfo?.totalRecord || 0}</span>건</small></div>
+          <button className="btn btn-success btn-sm d-flex align-items-center gap-2 px-3"><FileSpreadsheet size={16}/> 엑셀 다운로드</button>
+        </div>
+        <div className="table-responsive">
+          <table className="table table-hover align-middle mb-0">
+            <thead className="bg-light text-muted small">
+              <tr>
+                <th className="text-center" style={{width:'60px'}}>No</th>
+                <th>작업명</th><th className="text-center">상태</th><th>실행 정보</th><th>소요 시간</th><th>시작 / 종료 일시</th>
+              </tr>
+            </thead>
+            <tbody>
+              {logs.map((log, index) => {
+                const total = pageInfo?.totalRecord || 0;
+                const current = pageInfo?.currentPage || 1;
+                const size = pageInfo?.rowSize || 10;
+                const rowNo = total - ((current - 1) * size) - index;
+
+                return (
+                  <tr key={log.batchLogId || index}>
+                    <td className="text-center small text-muted">{rowNo || '-'}</td>
+                    <td>
+                      <div className="fw-bold text-dark">{log.jobName}</div>
+                      <div className="text-muted" style={{fontSize:'0.75rem'}}><Info size={10}/> {log.batchParams || '파라미터 없음'}</div>
+                    </td>
+                    <td className="text-center">
+                      {log.batchStatus === 'SUCCESS' ? (
+                        <span className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3"><CheckCircle2 size={12}/> 성공</span>
+                      ) : (
+                        <span className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-3"><AlertCircle size={12}/> 실패</span>
+                      )}
+                    </td>
+                    <td className="small">
+                      <div className="text-truncate" style={{maxWidth:'250px'}} title={log.resultMsg}>{log.resultMsg}</div>
+                      {log.errorLogId && (
+                        <button 
+                          className="btn btn-link p-0 small text-danger" 
+                          style={{fontSize:'0.75rem'}}
+                          onClick={() => alert(`에러 로그 #${log.errorLogId} 상세 보기로 이동합니다.`)}
+                        >
+                          상세 에러 보기 # {log.errorLogId}
+                        </button>
+                      )}
+                    </td>
+                    <td className="small text-muted"><Clock size={12}/> {formatDuration(log.duration)}</td>
+                    <td className="small text-muted">
+                      <div>S: {log.startDate ? new Date(log.startDate).toLocaleString() : '-'}</div>
+                      <div>E: {log.regDate ? new Date(log.regDate).toLocaleString() : '-'}</div>
+                    </td>
+                  </tr>
+                );
+              })}
+              {logs.length === 0 && <tr><td colSpan="6" className="text-center py-5 text-muted">조회된 배치 로그가 없습니다.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+        {pageInfo && pageInfo.totalRecord > 0 && (
+          <div className="p-4 border-top">
+            <Pagination 
+              pageInfo={pageInfo} 
+              onPageChange={(n) => setQuerySearchParams({page: n})} 
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default LogBatch;

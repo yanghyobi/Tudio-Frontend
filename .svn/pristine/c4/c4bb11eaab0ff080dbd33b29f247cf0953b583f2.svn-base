@@ -1,0 +1,276 @@
+import React, { useState } from 'react';
+import { 
+  AlertTriangle, Search, Calendar, ChevronRight, 
+  RotateCcw, FileSpreadsheet, X, AlertCircle, Info 
+} from 'lucide-react';
+
+// 1. 샘플 데이터 (JSP의 errorList 대응)
+const MOCK_ERRORS = [
+  { 
+    id: 1, 
+    date: '2025-12-19 14:05:22', 
+    code: '500', 
+    url: '/api/users/delete', 
+    message: 'Database connection timeout: Connection refused', 
+    user: 'admin', 
+    stackTrace: `at com.tudio.db.ConnectionPool.getConnection(ConnectionPool.java:120)\nat com.tudio.service.UserService.deleteUser(UserService.java:45)\nat com.tudio.controller.UserController.delete(UserController.java:30)\n... 25 more`
+  },
+  { 
+    id: 2, 
+    date: '2025-12-19 13:40:11', 
+    code: '404', 
+    url: '/assets/img/logo_old.png', 
+    message: 'File not found', 
+    user: 'guest', 
+    stackTrace: `org.springframework.web.servlet.PageNotFound.noHandlerFound(PageNotFound.java:120)\nRequest URI: /assets/img/logo_old.png`
+  },
+  { 
+    id: 3, 
+    date: '2025-12-19 12:15:00', 
+    code: '403', 
+    url: '/admin/settings', 
+    message: 'Access Denied: User has no permission', 
+    user: 'member01', 
+    stackTrace: `org.springframework.security.access.AccessDeniedException: Access is denied\nat com.tudio.security.AuthFilter.doFilter(AuthFilter.java:55)`
+  },
+  { 
+    id: 4, 
+    date: '2025-12-19 11:00:33', 
+    code: '400', 
+    url: '/api/login', 
+    message: 'Bad Request: Missing parameter "password"', 
+    user: 'unknown', 
+    stackTrace: `java.lang.IllegalArgumentException: Password cannot be null\nat com.tudio.controller.AuthController.login(AuthController.java:22)`
+  },
+];
+
+const LogError = () => {
+  const [logs, setLogs] = useState(MOCK_ERRORS);
+  const [selectedLog, setSelectedLog] = useState(null); // 모달에 표시할 로그 객체
+
+  // 오늘 날짜 구하기
+  const today = new Date().toISOString().split('T')[0];
+  const [searchParams, setSearchParams] = useState({
+    startDate: today,
+    endDate: today,
+    type: 'all',
+    keyword: ''
+  });
+
+  // 검색 초기화
+  const handleReset = () => {
+    setSearchParams({ startDate: today, endDate: today, type: 'all', keyword: '' });
+  };
+
+  // 엑셀 다운로드
+  const handleDownload = () => {
+    alert('엑셀 다운로드가 시작되었습니다.');
+  };
+
+  // 모달 닫기
+  const closeModal = () => setSelectedLog(null);
+
+  // 에러 코드별 배지 컬러
+  const getCodeBadge = (code) => {
+    if (code.startsWith('5')) { // 500번대 서버 에러
+      return <span className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">{code}</span>;
+    }
+    return <span className="badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-25">{code}</span>;
+  };
+
+  return (
+    <div className="flex-grow-1 p-5 d-flex flex-column h-100">
+      
+      {/* 1. Breadcrumb & Header */}
+      <div className="mb-4">
+        <nav className="text-muted small mb-2 d-flex align-items-center gap-2">
+          <span>Admin</span> <ChevronRight size={12} /> 
+          <span>로그 관리</span> <ChevronRight size={12} />
+          <span className="text-danger fw-bold">오류 로그</span>
+        </nav>
+        <h2 className="fw-bold text-dark m-0 d-flex align-items-center gap-2">
+          <AlertTriangle size={24} className="text-danger" /> 시스템 오류 발생 내역
+        </h2>
+      </div>
+
+      {/* 2. 검색 필터 영역 */}
+      <div className="card border-0 shadow-sm rounded-3 mb-4 bg-white">
+        <div className="card-body bg-light rounded-3 p-4">
+            <div className="row g-3 align-items-end">
+                <div className="col-md-4">
+                    <label className="form-label fw-bold small text-muted">발생 기간</label>
+                    <div className="input-group">
+                        <input 
+                            type="date" 
+                            className="form-control" 
+                            value={searchParams.startDate}
+                            onChange={(e) => setSearchParams({...searchParams, startDate: e.target.value})}
+                        />
+                        <span className="input-group-text bg-white border-start-0 border-end-0">~</span>
+                        <input 
+                            type="date" 
+                            className="form-control"
+                            value={searchParams.endDate}
+                            onChange={(e) => setSearchParams({...searchParams, endDate: e.target.value})}
+                        />
+                    </div>
+                </div>
+                
+                <div className="col-md-2">
+                    <label className="form-label fw-bold small text-muted">오류 유형</label>
+                    <select className="form-select" value={searchParams.type} onChange={(e) => setSearchParams({...searchParams, type: e.target.value})}>
+                        <option value="all">전체</option>
+                        <option value="500">500 (Server)</option>
+                        <option value="404">404 (Not Found)</option>
+                        <option value="403">403 (Forbidden)</option>
+                    </select>
+                </div>
+
+                <div className="col-md-4">
+                    <label className="form-label fw-bold small text-muted">검색어 (URL, 메시지)</label>
+                    <input 
+                        type="text" 
+                        className="form-control" 
+                        placeholder="검색어를 입력하세요"
+                        value={searchParams.keyword}
+                        onChange={(e) => setSearchParams({...searchParams, keyword: e.target.value})}
+                    />
+                </div>
+
+                <div className="col-md-2 d-flex gap-2">
+                    <button className="btn btn-primary flex-fill d-flex align-items-center justify-content-center gap-2">
+                        <Search size={16} /> 검색
+                    </button>
+                    <button className="btn btn-outline-secondary" onClick={handleReset} title="초기화">
+                        <RotateCcw size={16} />
+                    </button>
+                </div>
+            </div>
+        </div>
+      </div>
+
+      {/* 3. 리스트 영역 */}
+      <div className="flex-grow-1 card border-0 shadow-sm rounded-3 overflow-hidden d-flex flex-column bg-white">
+        
+        <div className="p-3 border-bottom d-flex justify-content-between align-items-center bg-white">
+           <div>
+             <h5 className="fw-bold mb-1 text-danger">⚠️ 오류 감지 목록</h5>
+             <small className="text-muted">
+                총 <span className="text-danger fw-bold">{logs.length}</span>건의 오류가 감지되었습니다.
+             </small>
+           </div>
+           <button className="btn btn-success btn-sm d-flex align-items-center gap-2 fw-bold px-3" onClick={handleDownload}>
+             <FileSpreadsheet size={16}/> 엑셀 다운로드
+           </button>
+        </div>
+
+        <div className="table-responsive flex-grow-1">
+          <table className="table table-hover align-middle mb-0">
+            <thead className="bg-light text-muted small text-uppercase">
+              <tr>
+                <th className="text-center py-3" style={{width:'60px'}}>No</th>
+                <th className="ps-3 py-3" style={{width:'180px'}}>발생 일시</th>
+                <th className="text-center py-3" style={{width:'100px'}}>Code</th>
+                <th className="py-3">요청 URL</th>
+                <th className="py-3">오류 메시지 (Summary)</th>
+                <th className="py-3" style={{width:'120px'}}>발생자</th>
+                <th className="text-center py-3" style={{width:'80px'}}>상세</th>
+              </tr>
+            </thead>
+            <tbody>
+              {logs.map((log) => (
+                <tr key={log.id}>
+                  <td className="text-center text-muted small">{log.id}</td>
+                  <td className="ps-3 text-muted small number-font">{log.date}</td>
+                  <td className="text-center">{getCodeBadge(log.code)}</td>
+                  <td className="text-primary small text-truncate" style={{maxWidth: '200px'}}>{log.url}</td>
+                  <td className="text-dark text-truncate" style={{maxWidth: '300px'}}>{log.message}</td>
+                  <td className="fw-bold text-secondary small">{log.user}</td>
+                  <td className="text-center">
+                    <button 
+                        className="btn btn-sm btn-light border" 
+                        onClick={() => setSelectedLog(log)}
+                        title="상세 보기"
+                    >
+                        <Search size={14}/>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {logs.length === 0 && (
+                <tr>
+                    <td colSpan="7" className="text-center py-5 text-muted">
+                        <CheckCircle2 size={40} className="text-success mb-2 opacity-50 d-block mx-auto"/>
+                        <span>최근 발생한 오류가 없습니다.</span>
+                    </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* 페이지네이션 */}
+        <div className="p-3 border-top bg-white d-flex justify-content-center">
+           <nav>
+             <ul className="pagination pagination-sm mb-0">
+               <li className="page-item disabled"><a className="page-link" href="#">이전</a></li>
+               <li className="page-item active"><a className="page-link" href="#">1</a></li>
+               <li className="page-item"><a className="page-link" href="#">2</a></li>
+               <li className="page-item"><a className="page-link" href="#">다음</a></li>
+             </ul>
+           </nav>
+        </div>
+
+      </div>
+
+      {/* ==================== 상세 모달 (Modal) ==================== */}
+      {selectedLog && (
+        <div className="modal d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
+            <div className="modal-dialog modal-dialog-centered modal-lg">
+                <div className="modal-content shadow-lg border-0">
+                    <div className="modal-header bg-danger text-white">
+                        <h5 className="modal-title fw-bold d-flex align-items-center gap-2">
+                            <AlertCircle size={20}/> 오류 상세 정보
+                        </h5>
+                        <button type="button" className="btn-close btn-close-white" onClick={closeModal}></button>
+                    </div>
+                    <div className="modal-body p-4">
+                        <div className="row g-3 mb-3">
+                            <div className="col-md-3">
+                                <label className="form-label fw-bold text-muted small">오류 코드</label>
+                                <input type="text" className="form-control bg-light text-danger fw-bold" value={selectedLog.code} readOnly />
+                            </div>
+                            <div className="col-md-9">
+                                <label className="form-label fw-bold text-muted small">요청 URL</label>
+                                <input type="text" className="form-control bg-light" value={selectedLog.url} readOnly />
+                            </div>
+                        </div>
+                        
+                        <div className="mb-3">
+                            <label className="form-label fw-bold text-muted small">오류 메시지</label>
+                            <input type="text" className="form-control bg-light text-dark fw-bold" value={selectedLog.message} readOnly />
+                        </div>
+
+                        <div className="mb-0">
+                            <label className="form-label fw-bold text-muted small d-flex align-items-center gap-1">
+                                <Info size={14}/> Stack Trace (Server Log)
+                            </label>
+                            {/* 터미널 스타일의 Stack Trace 영역 */}
+                            <div className="p-3 bg-dark text-white rounded small font-monospace" style={{height: '200px', overflowY: 'auto', whiteSpace: 'pre-wrap'}}>
+                                {selectedLog.stackTrace}
+                            </div>
+                        </div>
+                    </div>
+                    <div className="modal-footer">
+                        <button type="button" className="btn btn-secondary px-4" onClick={closeModal}>닫기</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+      )}
+
+    </div>
+  );
+};
+
+export default LogError;

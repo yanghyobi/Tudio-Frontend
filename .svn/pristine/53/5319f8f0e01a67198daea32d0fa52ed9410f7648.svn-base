@@ -1,0 +1,134 @@
+import React, { useState, useEffect } from "react";
+import "./Survey.css";
+
+const Survey = () => {
+  const [surveyData, setSurveyData] = useState(null); // 질문,보기 데이터
+  const [answerList, setAnswerList] = useState([]); // 답변 저장
+  
+  // 1. 설문 문항 불러오기
+  useEffect(() => {
+    const fetchSurvey = async () => {
+      try {
+        const response = await fetch("/tudio/survey/detail/2");   //현재 surveyNo = 2
+        const data = await response.json();
+        console.log("받아온 설문 번호 확인:", data.surveyNo);
+        setSurveyData(data);
+      } catch (error) {
+        console.error("데이터 로딩 실패:", error);
+      }
+    };
+    fetchSurvey();
+  }, []);
+
+  // 2. 답변 선택 시 실행
+  const handleOptionChange = (questionNo, selectAnswerNo, isMultiple = false) => {
+    const selectedNo = parseInt(selectAnswerNo);
+    setAnswerList((prev) => {
+      if (isMultiple) {
+        // 중복 선택이라면  (#6 문항만 해당)
+        const isExist = prev.find(item => item.questionNo === questionNo 
+          && item.selectAnswerNo === selectedNo);
+        if (isExist) {
+          // 답변이 된 상태에 변경할 경우 체크 해제
+          return prev.filter(item => !(item.questionNo === questionNo 
+            && item.selectAnswerNo === selectedNo));
+        } else {
+          return [...prev, { questionNo, selectAnswerNo: selectedNo }];
+        }
+      } else {
+        const filtered = prev.filter((item) => item.questionNo !== questionNo);
+        return [...filtered, { questionNo, selectAnswerNo: selectedNo }];
+      }
+    });
+  };
+
+  // 3. 제출 버튼 클릭 시 실행
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // 유효성검사 -> 질문 = 답변
+    if (answerList.length < surveyData.questionList.length) {
+      alert("모든 문항에 답변해 주세요!");
+      return;
+    }
+
+    const payload = {
+      surveyNo: parseInt(surveyData.surveyNo),
+      answerList: answerList // 사용자가 선택한 답변 리스트
+    };
+
+    console.log("전송 데이터(Payload):", payload);
+    try {
+      const response = await fetch("/tudio/survey/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.status === 409) { 
+        // 컨트롤러에서 409 -> 이미 참여한 memberNo 일 경우
+        alert("이미 설문에 참여하셨습니다! 중복 참여는 불가능합니다.");
+      } else if (response.ok) {
+        alert("설문이 성공적으로 제출되었습니다. 감사합니다!");
+        // 성공 후 이동할 페이지 (예: 메인화면)
+        window.location.href = "/tudio/main";
+      } else {
+        alert("저장 중 오류가 발생했습니다.");
+      }
+    } catch (error) {
+      console.error("통신 에러:", error);
+    }
+  };
+
+  if (!surveyData) return <div>설문 문항을 불러오는 중입니다</div>;
+
+  return (
+    <div className="container">
+      <div className="card">
+        <div style={{ background: '#eee', padding: '10px', marginBottom: '10px', borderRadius: '8px', fontSize: '12px' }}>
+          <strong>[설문 번호] : {surveyData?.surveyNo}</strong>
+        </div>
+
+        <h1 className="title">{surveyData.surveyTitle}</h1>
+        <p className="subtitle">{surveyData.surveyDescription}</p>
+
+        <form onSubmit={handleSubmit}>
+          {surveyData.questionList.map((q) => {
+            const isMultiple = Number(q.questionNo) === 6; 
+            const isScale = Number(q.questionNo) >= 7 && Number(q.questionNo) <= 20;
+            // 6번 질문 = 복수선택
+            // 7~20번 질문 = 1~5점 점수로 선택
+            return (
+              <div key={q.questionNo} className="question-box">
+                <label className="question-text">
+                  {q.questionContent} {isMultiple && "(중복 선택 가능)"}
+                </label>
+
+                <div className={isScale ? "scale-container" : "option-container"}>
+                  {q.optionList.map((opt) => (
+                    <label key={opt.answerNo} className={isScale ? "scale-option" : "option-label"}>
+                      <input 
+                        type={isMultiple ? "checkbox" : "radio"} // 6번만 checkbox, 나머지는 radio
+                        name={`q-${q.questionNo}`} 
+                        value={opt.answerNo}
+                        // 체크 상태 유지 (중복 선택 시 필요)
+                        checked={answerList.some(a => a.questionNo === q.questionNo && a.selectAnswerNo === opt.answerNo)}
+                        onChange={() => handleOptionChange(q.questionNo, opt.answerNo, isMultiple)}
+                      />
+                      <span>{opt.answerContent}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+          <button type="submit" className="submit-button">
+            제출하기
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default Survey;

@@ -1,0 +1,256 @@
+/* MeetingRoomAdmin.css */
+
+/* ==========================================================================
+   [0] 유틸리티 & 변수 (meeting-room-scope 내부)
+   ========================================================================== */
+.meeting-room-scope {
+    --primary-color: #4dabf7;
+    --success-color: #40c057;
+    --danger-color: #fa5252;
+    --warning-color: #fab005;
+    
+    /* 텍스트 색상 유틸리티 */
+    --text-main: #343a40;
+    --text-sub: #868e96;
+}
+
+/* 차트 및 통계용 텍스트 색상 */
+.meeting-room-scope .text-danger-custom { color: var(--danger-color) !important; }
+.meeting-room-scope .text-primary-custom { color: var(--primary-color) !important; }
+.meeting-room-scope .text-warning-custom { color: var(--warning-color) !important; }
+
+
+/* ==========================================================================
+   [1] 필터 버튼 (Filter Tabs)
+   ========================================================================== */
+.meeting-room-scope .filter-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.meeting-room-scope .filter-btn {
+    padding: 8px 20px;
+    border: 1px solid #e9ecef;
+    background: #fff;
+    border-radius: 50px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #868e96;
+    transition: all 0.2s ease;
+}
+
+.meeting-room-scope .filter-btn:hover {
+    background-color: #e9ecef;
+    color: var(--text-main);
+}
+
+.meeting-room-scope .filter-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 4px rgba(77, 171, 247, 0.3);
+}
+
+
+/* ==========================================================================
+   [2] 테이블 (Table)
+   ========================================================================== */
+/* 테이블 스타일이 깨지지 않도록 wrapper 내부 스타일 강제 */
+.meeting-room-scope .res-table-wrapper {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden; /* 모서리 둥글게 유지 */
+}
+
+.meeting-room-scope .res-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    table-layout: fixed; /* 컬럼 너비 고정 */
+}
+
+.meeting-room-scope .res-table th {
+    background-color: #f8f9fa;
+    padding: 16px;
+    text-align: left;
+    font-weight: 700;
+    color: var(--text-main);
+    border-bottom: 2px solid #e9ecef;
+    white-space: nowrap; /* 헤더 줄바꿈 방지 */
+}
+
+.meeting-room-scope .res-table td {
+    padding: 16px;
+    border-bottom: 1px solid #e9ecef;
+    color: var(--text-main);
+    vertical-align: middle;
+    background-color: #fff; /* 배경색 명시 */
+}
+
+.meeting-room-scope .res-table tr:hover td {
+    background-color: #f8f9fa;
+}
+
+
+/* ==========================================================================
+   [3] 뱃지 & 버튼 (Buttons & Badges)
+   ========================================================================== */
+
+/* 상태 뱃지 */
+.meeting-room-scope .status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 28px; 
+    padding: 0 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+/* 뱃지 색상 정의 */
+.meeting-room-scope .status-701 { background-color: #fff9db; color: #f08c00; border: 1px solid #ffe066; } /* 신청 */
+.meeting-room-scope .status-702 { background-color: #ebfbee; color: #2f9e44; border: 1px solid #b2f2bb; } /* 확정 */
+.meeting-room-scope .status-703 { background-color: #fff5f5; color: #e03131; border: 1px solid #ffc9c9; } /* 취소/반려 */
+.meeting-room-scope .status-704 { background-color: #e7f5ff; color: #1c7ed6; border: 1px solid #a5d8ff; } /* 완료 */
+.meeting-room-scope .status-705 { background-color: #343a40; color: #fff;    border: 1px solid #343a40; } /* 노쇼 */
+.meeting-room-scope .status-cancel { background-color: #f8f9fa; color: #868e96; border: 1px solid #dee2e6; } 
+
+/* 액션 버튼 (확정, 반려, 완료, 노쇼) */
+.meeting-room-scope .btn-approve, 
+.meeting-room-scope .btn-reject, 
+.meeting-room-scope .btn-complete, 
+.meeting-room-scope .btn-noshow {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+    border: none;
+    cursor: pointer;
+    margin-right: 4px;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.meeting-room-scope .btn-approve { background-color: var(--success-color); }
+.meeting-room-scope .btn-reject { background-color: var(--danger-color); }
+.meeting-room-scope .btn-complete { background-color: #495057; }
+.meeting-room-scope .btn-noshow { background-color: #212529; }
+
+.meeting-room-scope button:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+
+/* ==========================================================================
+   [4] 모달 (Modal) - 중요: Portal로 나가므로 .meeting-room-scope 밖에 정의해야 함!!
+   ========================================================================== */
+
+/* 오버레이: 화면 전체를 덮고 중앙 정렬 */
+.res-modal-overlay {
+    position: fixed !important;
+    top: 0; 
+    left: 0; 
+    right: 0; 
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5); /* 반투명 검정 */
+    backdrop-filter: blur(2px);
+    display: flex; /* Flexbox로 중앙 정렬 */
+    justify-content: center; /* 가로 중앙 */
+    align-items: center;     /* 세로 중앙 */
+    z-index: 9999 !important; /* SweetAlert(10000 이상)보다 낮아야 함 */
+}
+
+/* SweetAlert가 모달 뒤에 숨지 않도록 강제 조정 */
+div:where(.swal2-container) {
+    z-index: 20000 !important;
+}
+
+/* 모달 본체 */
+.res-modal-overlay .res-modal-content {
+    background: #fff;
+    padding: 32px;
+    border-radius: 16px;
+    width: 440px;
+    max-width: 90%; 
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    border: none;
+    
+    /* 애니메이션 */
+    animation: slideUp 0.3s ease-out;
+    
+    /* 기존 스타일 초기화 */
+    position: relative;
+    margin: 0;
+    transform: none;
+    display: block;
+}
+
+/* 모달 제목 */
+.res-modal-overlay .res-modal-title {
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* 모달 내부 입력창 */
+.res-modal-overlay .modal-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    resize: none;
+    margin-bottom: 24px;
+    font-size: 14px;
+    outline: none;
+    font-family: inherit;
+}
+.res-modal-overlay .modal-textarea:focus {
+    border-color: #4dabf7; /* 직접 색상 지정 */
+}
+
+/* 모달 하단 버튼 영역 */
+.res-modal-overlay .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+/* 모달 내부 취소/반려 버튼 (직접 색상 지정) */
+.res-modal-overlay .btn-cancel {
+    background: #f1f3f5;
+    color: #343a40;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.res-modal-overlay .btn-confirm-reject {
+    background: #fa5252; /* 빨강 직접 지정 */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+/* 애니메이션 정의 */
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}

@@ -1,0 +1,55 @@
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import SiteMain from './siteadmin/SiteMain';
+
+// [페이지 컴포넌트 import]
+import UserList from './pages/user/UserList';
+import BoardNotice from './pages/board/BoardNotice';
+import BoardFaq from './pages/board/BoardFaq';
+import BoardInquiry from './pages/board/BoardInquiry';
+import SurveyList from './pages/survey-admin/SurveyList';
+import SurveyForm from './pages/survey-admin/SurveyForm';
+import LogLogin from './pages/log/LogLogin';
+import LogError from './pages/log/LogError';
+import PolicyTerms from './pages/policy/PolicyTerms';
+import axios from 'axios';
+
+axios.defaults.withCredentials = true;
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* /admin 경로로 들어오면 SiteMain 레이아웃을 보여줌 */}
+        <Route path="/admin" element={<SiteMain />}>
+          
+          {/* 1. 초기 화면 설정 (initUrl 대응) */}
+          <Route index element={<Navigate to="/admin/user/list" replace />} />
+
+          {/* 2. 페이지 라우팅 */}
+          {/* 회원 관리 */}
+          <Route path="user/list" element={<UserList />} />
+
+          {/* 게시판 관리 */}
+          <Route path="board/notice" element={<BoardNotice />} />
+          <Route path="board/faq" element={<BoardFaq />} />
+          <Route path="board/inquiry" element={<BoardInquiry />} />
+
+          {/* 설문 관리 */}
+          <Route path="survey/list" element={<SurveyList />} />
+          <Route path="survey/form" element={<SurveyForm />} /> {/* 등록/수정 폼 */}
+
+          {/* 로그 관리 */}
+          <Route path="log/login" element={<LogLogin />} />
+          <Route path="log/error" element={<LogError />} />
+
+          {/* 정책 관리 */}
+          <Route path="policy/terms" element={<PolicyTerms />} />
+          
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+export default App;

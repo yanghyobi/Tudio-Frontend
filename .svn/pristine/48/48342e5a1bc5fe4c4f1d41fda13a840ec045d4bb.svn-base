@@ -1,0 +1,462 @@
+/* MeetingRoomAdmin.css */
+
+/* ==========================================================================
+   [0] 유틸리티 & 변수 (meeting-room-scope 내부)
+   ========================================================================== */
+.meeting-room-scope {
+    --primary-color: #4dabf7;
+    --success-color: #40c057;
+    --danger-color: #fa5252;
+    --warning-color: #fab005;
+    
+    /* 텍스트 색상 유틸리티 */
+    --text-main: #343a40;
+    --text-sub: #868e96;
+}
+
+/* 차트 및 통계용 텍스트 색상 */
+.meeting-room-scope .text-danger-custom { color: var(--danger-color) !important; }
+.meeting-room-scope .text-primary-custom { color: var(--primary-color) !important; }
+.meeting-room-scope .text-warning-custom { color: var(--warning-color) !important; }
+
+
+/* ==========================================================================
+   [1] 필터 버튼 (Filter Tabs)
+   ========================================================================== */
+.meeting-room-scope .filter-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.meeting-room-scope .filter-btn {
+    padding: 8px 20px;
+    border: 1px solid #e9ecef;
+    background: #fff;
+    border-radius: 50px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #868e96;
+    transition: all 0.2s ease;
+}
+
+.meeting-room-scope .filter-btn:hover {
+    background-color: #e9ecef;
+    color: var(--text-main);
+}
+
+.meeting-room-scope .filter-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 4px rgba(77, 171, 247, 0.3);
+}
+
+
+/* ==========================================================================
+   [2] 테이블 (Table)
+   ========================================================================== */
+/* 테이블 스타일이 깨지지 않도록 wrapper 내부 스타일 강제 */
+.meeting-room-scope .res-table-wrapper {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden; /* 모서리 둥글게 유지 */
+}
+
+.meeting-room-scope .res-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    table-layout: fixed; /* 컬럼 너비 고정 */
+}
+
+.meeting-room-scope .res-table th {
+    background-color: #f8f9fa;
+    padding: 16px;
+    text-align: left;
+    font-weight: 700;
+    color: var(--text-main);
+    border-bottom: 2px solid #e9ecef;
+    white-space: nowrap; /* 헤더 줄바꿈 방지 */
+}
+
+.meeting-room-scope .res-table td {
+    padding: 16px;
+    border-bottom: 1px solid #e9ecef;
+    color: var(--text-main);
+    vertical-align: middle;
+    background-color: #fff; /* 배경색 명시 */
+}
+
+.meeting-room-scope .res-table tr:hover td {
+    background-color: #f8f9fa;
+}
+
+
+/* ==========================================================================
+   [2] 테이블 & 스케줄러 깨짐 방지
+   ========================================================================== */
+.meeting-room-scope .res-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    table-layout: fixed !important; /* 너비 고정 */
+}
+
+.meeting-room-scope .res-table td {
+    padding: 16px !important;
+    vertical-align: middle !important; /* 셀 내부 중앙 정렬 */
+    border-bottom: 1px solid #e9ecef !important;
+    position: relative; /* 툴팁의 기준점 */
+}
+
+/* 스케줄러 영역 (확장된 td 내부) */
+.meeting-room-scope .schedule-container {
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    overflow: visible; /* 툴팁이 밖으로 나와야 함 */
+}
+
+/* ==========================================================================
+   [3] 타임 슬롯 및 툴팁 (말풍선)
+   ========================================================================== */
+   /* 7일(일~토)을 가로로 나란히 배치 */
+.meeting-room-scope .week-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr); /* 정확히 7등분 */
+    gap: 0; /* 요일 사이 간격 (필요시 1px) */
+    background-color: #dee2e6; /* 구분선 효과 */
+    border: 1px solid #dee2e6;
+    min-width: 700px; /* 너무 좁아지지 않도록 설정 */
+}
+
+/* 각 요일 기둥 */
+.meeting-room-scope .day-column {
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 요일 헤더 (일, 월...) */
+.meeting-room-scope .day-header {
+    padding: 10px 0;
+    text-align: center;
+    font-weight: 800;
+    font-size: 13px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+/* 시간 슬롯들이 담기는 컨테이너 */
+.meeting-room-scope .time-slots {
+    display: flex;
+    flex-direction: column;
+}
+
+/* 개별 시간 칸 */
+.meeting-room-scope .time-slot {
+    position: relative;
+    height: 60px; /* 세로 높이 고정 */
+    border-bottom: 1px solid #f1f3f5;
+    border-right: 1px solid #f1f3f5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+/* 마지막 요일은 오른쪽 테두리 제거 */
+.meeting-room-scope .day-column:last-child .time-slot {
+    border-right: none;
+}
+
+/* 마우스 올렸을 때 색상 변경 */
+.meeting-room-scope .time-slot:hover {
+    background-color: #e7f5ff;
+}
+
+/* 예약된 칸 배경색 */
+.meeting-room-scope .time-slot.booked {
+    background-color: #f8f9fa;
+    cursor: pointer;
+}
+
+/* 관리자가 선택 중인 칸 */
+.meeting-room-scope .time-slot.selected {
+    background-color: #d0ebff !important;
+}
+
+
+.meeting-room-scope .slot-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.meeting-room-scope .slot-time {
+    font-size: 11px;
+    color: #adb5bd;
+    font-weight: 600;
+}
+
+/* 라벨 스타일 */
+.meeting-room-scope .booked-label {
+    font-size: 10px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-weight: 700;
+}
+.meeting-room-scope .booked-label.user { background: #e7f5ff; color: #1c7ed6; }
+.meeting-room-scope .booked-label.admin { background: #fff5f5; color: #e03131; }
+
+/* --- 툴팁 상세 설정 --- */
+.meeting-room-scope .custom-tooltip {
+    display: none; /* 기본 숨김 */
+    position: absolute;
+    bottom: 110%; /* 슬롯 위로 */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 220px;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    border: 1px solid #dee2e6;
+    padding: 12px;
+    z-index: 999;
+    pointer-events: none; /* 툴팁이 마우스 클릭을 방해하지 않음 */
+}
+
+/* 마우스 올릴 때만 툴팁 표시 */
+.meeting-room-scope .time-slot:hover .custom-tooltip {
+    display: block;
+    animation: tooltipFadeIn 0.2s ease-out;
+}
+
+.meeting-room-scope .tooltip-header {
+    font-weight: 800;
+    font-size: 13px;
+    margin-bottom: 8px;
+    color: #343a40;
+    border-bottom: 1px solid #f1f3f5;
+    padding-bottom: 5px;
+}
+
+.meeting-room-scope .tooltip-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    font-size: 12px;
+}
+
+.meeting-room-scope .tooltip-label { color: #868e96; }
+.meeting-room-scope .tooltip-value { color: #212529; font-weight: 600; }
+
+.meeting-room-scope .tooltip-divider {
+    height: 1px;
+    background: #f1f3f5;
+    margin: 8px 0;
+}
+
+.meeting-room-scope .tooltip-content-text {
+    font-size: 12px;
+    color: #495057;
+    background: #f8f9fa;
+    padding: 6px;
+    border-radius: 4px;
+    line-height: 1.4;
+}
+
+/* 화살표 */
+.meeting-room-scope .custom-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px;
+    border-style: solid;
+    border-color: #fff transparent transparent transparent;
+}
+
+@keyframes tooltipFadeIn {
+    from { opacity: 0; transform: translate(-50%, 10px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* ==========================================================================
+   [4] 모달 (Modal) - 중요: Portal로 나가므로 .meeting-room-scope 밖에 정의해야 함!!
+   ========================================================================== */
+
+/* 오버레이: 화면 전체를 덮고 중앙 정렬 */
+.res-modal-overlay {
+    position: fixed !important;
+    top: 0; 
+    left: 0; 
+    right: 0; 
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5); /* 반투명 검정 */
+    backdrop-filter: blur(2px);
+    display: flex; /* Flexbox로 중앙 정렬 */
+    justify-content: center; /* 가로 중앙 */
+    align-items: center;     /* 세로 중앙 */
+    z-index: 9999 !important; /* SweetAlert(10000 이상)보다 낮아야 함 */
+}
+
+/* SweetAlert가 모달 뒤에 숨지 않도록 강제 조정 */
+div:where(.swal2-container) {
+    z-index: 20000 !important;
+}
+
+/* 모달 본체 */
+.res-modal-overlay .res-modal-content {
+    background: #fff;
+    padding: 32px;
+    border-radius: 16px;
+    width: 440px;
+    max-width: 90%; 
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    border: none;
+    
+    /* 애니메이션 */
+    animation: slideUp 0.3s ease-out;
+    
+    /* 기존 스타일 초기화 */
+    position: relative;
+    margin: 0;
+    transform: none;
+    display: block;
+}
+
+/* 모달 제목 */
+.res-modal-overlay .res-modal-title {
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* 모달 내부 입력창 */
+.res-modal-overlay .modal-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    resize: none;
+    margin-bottom: 24px;
+    font-size: 14px;
+    outline: none;
+    font-family: inherit;
+}
+.res-modal-overlay .modal-textarea:focus {
+    border-color: #4dabf7; /* 직접 색상 지정 */
+}
+
+/* 모달 하단 버튼 영역 */
+.res-modal-overlay .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+/* 모달 내부 취소/반려 버튼 (직접 색상 지정) */
+.res-modal-overlay .btn-cancel {
+    background: #f1f3f5;
+    color: #343a40;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.res-modal-overlay .btn-confirm-reject {
+    background: #fa5252; /* 빨강 직접 지정 */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+/* 애니메이션 정의 */
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* 버튼 공통 스타일 초기화 */
+.meeting-room-scope button {
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-right: 4px; /* 버튼 사이 간격 */
+}
+
+.meeting-room-scope button:last-child {
+    margin-right: 0;
+}
+
+/* 상태별 버튼 색상 정의 */
+.meeting-room-scope .btn-approve {
+    background-color: #ebfbee;
+    color: #40c057;
+}
+.meeting-room-scope .btn-approve:hover {
+    background-color: #40c057;
+    color: #fff;
+}
+
+.meeting-room-scope .btn-reject {
+    background-color: #fff5f5;
+    color: #fa5252;
+}
+.meeting-room-scope .btn-reject:hover {
+    background-color: #fa5252;
+    color: #fff;
+}
+
+.meeting-room-scope .btn-complete {
+    background-color: #f1f3f5;
+    color: #495057;
+}
+.meeting-room-scope .btn-complete:hover {
+    background-color: #495057;
+    color: #fff;
+}
+
+.meeting-room-scope .btn-noshow {
+    background-color: #fff9db;
+    color: #f08c00;
+}
+.meeting-room-scope .btn-noshow:hover {
+    background-color: #f08c00;
+    color: #fff;
+}
+
+/* 상태 배지(Badge) 스타일도 정의되어 있는지 확인하세요 */
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+}
+.status-701 { background: #fff9db; color: #f08c00; } /* 신청 */
+.status-702 { background: #ebfbee; color: #40c057; } /* 확정 */
+.status-cancel { background: #f1f3f5; color: #868e96; } /* 취소 */
+.status-703 { background: #fff5f5; color: #fa5252; } /* 반려 */
+.status-704 { background: #e7f5ff; color: #1c7ed6; } /* 완료 */
+.status-705 { background: #f8f9fa; color: #343a40; border: 1px solid #dee2e6; } /* 노쇼 */

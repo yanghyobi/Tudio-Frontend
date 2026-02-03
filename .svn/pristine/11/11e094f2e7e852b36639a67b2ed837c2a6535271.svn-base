@@ -1,0 +1,126 @@
+import React, { useState, useRef, useEffect } from 'react';
+
+const INITIAL_TERMS = `제 1조 (목적)
+본 약관은 Tudio(이하 "회사")가 제공하는 서비스의 이용조건 및 절차, 이용자와 회사의 권리, 의무, 책임사항을 규정함을 목적으로 합니다.
+
+(중략...)`;
+
+const PolicyTerms = () => {
+  const [content, setContent] = useState(INITIAL_TERMS);
+  const [isEditing, setIsEditing] = useState(false);
+  const textareaRef = useRef(null);
+
+  useEffect(() => {
+    if (isEditing && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [isEditing]);
+
+  const handleToggleEdit = () => {
+    if (isEditing) {
+      if (window.confirm('변경된 내용을 저장하시겠습니까?')) {
+        alert('저장되었습니다.');
+        setIsEditing(false);
+      }
+    } else {
+      setIsEditing(true);
+    }
+  };
+
+  return (
+    <div className="flex-grow-1 p-5 bg-white d-flex flex-column">
+      
+      {/* 1. 헤더 영역: 아이콘 없이 텍스트로만 깔끔하게 */}
+      <div className="d-flex justify-content-between align-items-end mb-4 pb-2 border-bottom">
+        <div>
+          <h2 className="fw-bold text-dark m-0 mb-2" style={{ letterSpacing: '-0.5px' }}>
+            이용약관 관리
+          </h2>
+          <p className="text-muted text-opacity-75 mb-0">
+            서비스 이용약관 및 개인정보처리방침을 관리하는 페이지입니다.
+          </p>
+        </div>
+
+        {/* 버튼 그룹: 텍스트 중심 */}
+        <div className="d-flex gap-2 mb-1">
+           {isEditing && (
+              <button 
+                className="btn btn-outline-secondary px-4 fw-medium" 
+                onClick={() => setIsEditing(false)}
+              >
+                 취소
+              </button>
+           )}
+           <button 
+            className={`btn px-4 fw-bold ${
+                isEditing 
+                ? 'btn-dark' // 수정 중일 땐 검정 버튼 (강조)
+                : 'btn-primary' // 평소엔 파란 버튼
+            }`}
+            onClick={handleToggleEdit}
+          >
+            {isEditing ? '변경사항 저장' : '내용 수정하기'}
+          </button>
+        </div>
+      </div>
+
+      {/* 2. 상태 표시줄: 배지 대신 텍스트와 점(Dot) 활용 */}
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <div className="d-flex align-items-center gap-3">
+            {isEditing ? (
+                <span className="text-primary fw-bold d-flex align-items-center gap-2">
+                    <span className="spinner-grow spinner-grow-sm" role="status"></span>
+                    수정 모드 (Editing)
+                </span>
+            ) : (
+                <span className="text-success fw-bold d-flex align-items-center gap-2">
+                    <span style={{ fontSize: '20px', lineHeight: 0 }}>●</span>
+                    현재 게시 중 (Live)
+                </span>
+            )}
+            <div className="vr text-secondary opacity-25"></div>
+            <span className="text-muted small">
+                최종 수정: 2024.01.08 14:30
+            </span>
+        </div>
+      </div>
+
+      {/* 3. 에디터 영역: 그림자 없이 깔끔한 보더 라인 */}
+      <div className={`flex-grow-1 d-flex flex-column rounded-3 overflow-hidden ${isEditing ? 'border border-primary border-2' : 'border'}`} style={{ minHeight: '60vh' }}>
+        
+        {/* 텍스트 영역 */}
+        <textarea 
+          ref={textareaRef}
+          className="form-control border-0 flex-grow-1 p-5"
+          style={{ 
+            resize: 'none', 
+            fontSize: '16px', 
+            lineHeight: '1.8',
+            outline: 'none',
+            boxShadow: 'none',
+            backgroundColor: isEditing ? '#fff' : '#f8f9fa', // 읽기 모드는 아주 연한 회색
+            color: '#333',
+            fontFamily: "'Pretendard', sans-serif"
+          }}
+          readOnly={!isEditing}
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          spellCheck="false"
+        />
+
+        {/* 하단 정보바 */}
+        <div className="bg-white border-top py-3 px-4 d-flex justify-content-between align-items-center text-muted small">
+           <span>
+             ※ HTML 태그 없이 텍스트만 입력하세요. 줄바꿈은 자동으로 반영됩니다.
+           </span>
+           <span className="font-monospace">
+             Length: <strong className="text-dark">{content.length.toLocaleString()}</strong>
+           </span>
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
+export default PolicyTerms;

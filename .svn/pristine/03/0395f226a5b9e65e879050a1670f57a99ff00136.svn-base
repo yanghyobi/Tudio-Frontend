@@ -1,0 +1,120 @@
+@charset "UTF-8";
+
+/* [레이아웃] */
+.sidebar { 
+    width: var(--sidebar-width); 
+    position: fixed; 
+    top: var(--header-height); 
+    left: 0; 
+    bottom: 0;
+    border-right: 1px solid #e2e8f0; 
+    
+    /* 관리자용 변수 적용 */
+    background: var(--bg-color); 
+    z-index: 100; 
+    overflow-y: auto;
+    
+    /* 왼쪽 정렬 (관리자 기본) */
+    text-align: left;
+    padding-top: 0;
+}
+
+/* 스크롤바 커스텀 */
+.sidebar-main-scroll { height: 100%; overflow-y: auto; padding-bottom: 50px; }
+.sidebar-main-scroll::-webkit-scrollbar { width: 5px; }
+.sidebar-main-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+
+/* [링크 스타일 - 가로 배치] */
+.nav-link {
+    display: flex;
+    flex-direction: row;        /* 가로 배치 (아이콘 - 글씨) */
+    align-items: center;
+    justify-content: flex-start; /* 왼쪽 정렬 */
+    
+    padding: 10px 20px 10px 25px; /* 내부 여백 조절 */
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+    
+    /* 색상 적용 */
+    color: var(--text-color);
+    border-left: 4px solid transparent; /* 왼쪽에 활성 바 */
+}
+
+/* 아이콘 스타일 */
+.nav-link i { 
+    margin-right: 10px;
+    margin-bottom: 0;
+    font-size: 1.1rem;
+    display: block;
+    width: 20px; /* 아이콘 너비 고정해서 정렬 맞춤 */
+    text-align: center;
+}
+
+/* 마우스 올렸을 때 */
+.nav-link:hover {
+    color: var(--active-text);
+    background-color: var(--hover-bg);
+}
+
+/* 활성화(Active) 되었을 때 */
+.nav-link.active {
+    color: var(--active-text);
+    background-color: var(--active-bg);
+    border-left-color: #fff; /* 흰색 바 표시 */
+    font-weight: 600;
+}
+
+/* [그룹 헤더 (System, Menu 등)] */
+.sidebar-group-header {
+    padding: 20px 20px 10px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #94a3b8;
+}
+
+/* 그룹 버튼 (회원관리, 게시판관리 등) */
+.sidebar-group-btn { 
+    width: 100%; 
+    background: none;      /* 배경 투명하게 */
+    border: none;          /* 테두리 없애기 */
+    display: flex; 
+    justify-content: space-between; /* 글씨와 화살표 양끝 정렬 */
+    align-items: center; 
+    cursor: pointer; 
+    
+    /* 폰트 및 색상 설정 */
+    color: #94a3b8;        /* 기본 색상 (연한 회색) */
+    padding: 15px 20px 10px; 
+    font-size: 0.75rem; 
+    font-weight: 700; 
+    text-transform: uppercase; 
+    letter-spacing: 1px; 
+    transition: color 0.2s; 
+}
+
+/* 마우스 올렸을 때 */
+.sidebar-group-btn:hover { 
+    color: #fff;           /* 흰색으로 강조 */
+}
+
+/* 화살표 아이콘 회전 애니메이션 */
+.toggle-icon { 
+    transition: transform 0.2s ease; 
+    font-size: 0.8rem; 
+}
+
+/* 메뉴가 열렸을 때 (Bootstrap이 aria-expanded를 true로 바꿈) */
+.sidebar-group-btn[aria-expanded="true"] .toggle-icon { 
+    transform: rotate(180deg); /* 화살표 뒤집기 */
+    color: #fff;
+}
+
+/* 하위 메뉴 배경색 (약간 더 어둡게) */
+.collapse-inner { 
+    background-color: rgba(0, 0, 0, 0.2); 
+    padding-bottom: 10px; 
+}

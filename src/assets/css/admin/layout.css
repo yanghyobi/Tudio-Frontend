@@ -1,0 +1,310 @@
+@charset "UTF-8";
+
+/* =========================================
+   1. 레이아웃 및 공통 설정 (핵심 수정)
+   ========================================= */
+.main-content-wrap {
+    
+    margin-left: var(--sidebar-width, 250px); 
+
+    background-color: #f8fafc;
+    min-height: 100vh; /* 화면 전체 높이 보장 */
+    
+    display: flex;
+    flex-direction: column;
+
+    /* --header-height 변수가 정의 안 되어 있다면 80px로 수정하세요 */
+    padding-top: var(--header-height, 80px); 
+    
+    /* 나머지 패딩 0 */
+    padding-right: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+
+    min-width: 0;
+}
+
+/* =========================================
+   2. 상단 인덱스 탭 (Project Tabs)
+   ========================================= */
+.custom-index-tabs {
+    gap: 2px;
+    padding-left: 0;
+}
+
+.custom-index-tabs .nav-link {
+    background-color: #f1f3f5;
+    border: 1px solid #BFDBFE !important;
+    border-bottom: none !important;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    color: #64748b;
+    padding: 12px 25px;
+    margin-right: 4px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    
+    /* 탭 내부 정렬 */
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-direction: row;
+}
+
+.custom-index-tabs .nav-link:hover {
+    background-color: #e9ecef;
+    color: #212529;
+}
+
+/* 활성화된 탭 */
+.custom-index-tabs .nav-link.active {
+    background-color: #ffffff !important; 
+    color: #3B82F6 !important;
+    font-weight: 700 !important;
+    border-top: 1px solid #BFDBFE !important;
+    border-left: 1px solid #BFDBFE !important;
+    border-right: 1px solid #BFDBFE !important;
+    border-bottom: 1px solid #ffffff !important;
+    position: relative;
+    z-index: 5;
+    margin-bottom: -1px; 
+}
+
+/* 아이콘 스타일 */
+.custom-index-tabs .nav-link i {
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+    margin: 2px 0 0 0;
+    min-width: 24px;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+/* 탭 아래 본문 카드 */
+.tab-content-card {
+    background: #fff;
+    border: 1px solid #BFDBFE;
+    border-radius: 0 8px 8px 8px;
+    margin-top: -1px;
+    padding: 24px;
+}
+
+/* =========================================
+   3. 게시판 내부 카테고리 탭
+   ========================================= */
+.board-tabs {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.board-tabs .tab {
+    border: 1px solid #e6edf6;
+    background: #fff;
+    padding: 7px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    color: #495057;
+    font-weight: 500;
+    transition: .15s ease;
+}
+
+.board-tabs .tab:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-1px);
+}
+
+.board-tabs .tab.is-active {
+    border-color: #0d6efd;
+    background: rgba(13, 110, 253, .08);
+    color: #0d6efd;
+    font-weight: 700;
+}
+
+/* =========================================
+   4. 검색 필터 및 버튼
+   ========================================= */
+.board-filter {
+    background-color: #f8fafc;
+    border: 1px solid #eef2f7;
+}
+
+.btn-primary.rounded-pill {
+    font-weight: 600;
+    padding: 8px 20px;
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.15);
+}
+
+/* =========================================
+   5. 게시판 테이블 (목록)
+   ========================================= */
+.table {
+    font-size: 0.95rem;
+    border-collapse: separate;
+}
+
+.table thead th {
+    font-weight: 700;
+    color: #495057;
+    padding: 15px 10px;
+    background-color: #f8f9fa !important;
+    border-bottom: 2px solid #eef2f7;
+}
+
+.table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.table tbody tr:hover {
+    background-color: #fcfdfe !important;
+    transform: scale(1.002);
+}
+
+.table tbody td {
+    font-weight: 500;
+    color: #495057;
+    padding: 16px 10px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.table tbody td a {
+    color: #1e293b;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.table tbody td a:hover {
+    color: #0d6efd;
+}
+
+/* =========================================
+   6. 페이지네이션 (Pagination)
+   ========================================= */
+.board-footer {
+    display: flex;
+    justify-content: center;
+    padding: 20px 0;
+}
+
+.pager { display: flex; gap: 5px; }
+
+.pg {
+    border: 1px solid #dee2e6;
+    background: #fff;
+    color: #495057;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    text-decoration: none;
+    transition: .15s ease;
+}
+
+.pg:hover { background: #f1f5ff; color: #0d6efd; }
+
+.pg.is-active {
+    background: #0d6efd;
+    color: #fff;
+    border-color: #0d6efd;
+    font-weight: 700;
+}
+
+/* =========================================
+   7. 요약 카드 (Summary)
+   ========================================= */
+.summary-container {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 25px;
+}
+
+.summary-card {
+    flex: 1;
+    background: #ffffff;
+    border: 1px solid #BFDBFE;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(44, 62, 80, 0.05);
+    transition: all 0.2s ease;
+}
+
+.summary-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.1);
+}
+
+.summary-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    margin-bottom: 8px;
+}
+
+.summary-value {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #002B55;
+    margin-bottom: 5px;
+}
+
+.summary-progress-wrapper {
+    height: 6px;
+    background-color: #E2E8F0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 12px;
+}
+
+.summary-progress-bar {
+    height: 100%;
+    background-color: #3B82F6;
+    border-radius: 10px;
+}
+
+.summary-subtext {
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.summary-badge {
+    background-color: #D9E9FF;
+    color: #1E40AF;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.text-danger-custom {
+    color: #ef4444 !important;
+}
+
+/* =========================================
+   8. 푸터 (Footer) - [추가]
+   ========================================= */
+.footer {
+    background-color: #343a40; 
+    padding: 15px 20px;
+    width: auto;         
+    box-sizing: border-box;
+    border-top: 1px solid #495057; 
+    color: #ced4da; 
+    font-size: 0.8rem;
+    /* transition 제거됨 */
+    
+    /* [수정] 내용이 짧아도 항상 화면 바닥에 붙음 */
+    margin-top: auto; 
+}
+
+.footer a { color: #ced4da; text-decoration: none; transition: color 0.2s ease; }
+.footer a:hover { color: #ffffff; text-decoration: underline; }
+.footer h5, .footer h6 { color: #ffffff; font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; }
+.footer .list-unstyled { margin-bottom: 0; }
+.footer .list-unstyled li { margin-bottom: 2px; }
+.footer address { margin-bottom: 0; line-height: 1.6; color: #adb5bd; font-style: normal; }
+.footer .separator { margin: 0 6px; color: #6c757d; }
